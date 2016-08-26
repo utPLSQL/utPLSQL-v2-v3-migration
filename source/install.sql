@@ -129,7 +129,8 @@ whenever oserror exit failure rollback
 @@legacy/ut_assert.pks
 @@legacy/ut_assert.pkb
 
-
+@@ut_v2_migration.pks
+@@ut_v2_migration.pkb
 
 
 prompt Validating installation

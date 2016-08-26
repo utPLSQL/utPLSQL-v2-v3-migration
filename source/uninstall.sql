@@ -1,3 +1,5 @@
+drop package ut_v2_migration;
+
 drop package ut_suite_manager;
 
 drop package ut_assert;
