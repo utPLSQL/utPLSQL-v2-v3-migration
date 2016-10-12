@@ -89,7 +89,7 @@ create or replace package body ut_v2_migration is
                   from ut_package p
                       ,ut_suite s
                       ,ut_config c
-                 where p.id in (select max(p2.id) keep(dense_rank first order by p2.suite_id desc)  
+                 where p.id in (select max(p2.id) keep(dense_rank first order by p2.suite_id desc nulls last)  
                                   from ut_package p2 
                                  group by p2.owner,p2.name)
                    and p.suite_id = s.id(+)
