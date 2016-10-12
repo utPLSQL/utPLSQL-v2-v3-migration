@@ -83,15 +83,17 @@ create or replace package body ut_v2_migration is
     for rec in (select p.owner
                       ,p.name
                       ,p.description as package_desc
-                      ,p.prefix
+                      ,nvl(p.prefix, c.prefix) prefix
                       ,s.name suite_name
                       ,s.description as suite_desc
                   from ut_package p
                       ,ut_suite s
+                      ,ut_config c
                  where p.id in (select max(p2.id) keep(dense_rank first order by p2.suite_id desc)  
                                   from ut_package p2 
                                  group by p2.owner,p2.name)
-                   and p.suite_id = s.id(+)) loop
+                   and p.suite_id = s.id(+)
+                   and p.owner = c.username(+)) loop
       begin             
         ut_utils.debug_log('Migrating ' || rec.owner || '.' || rec.name);
         upgrade_v2_package_spec(a_owner_name     => rec.owner,
