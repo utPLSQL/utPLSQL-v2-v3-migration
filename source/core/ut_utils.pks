@@ -33,7 +33,9 @@ create or replace package ut_utils authid definer is
   pragma exception_init(ex_unsopported_rollback_type, -20200);
   
   ex_package_already_migrated exception;
-  pragma exception_init(ex_unsopported_rollback_type, -20400);
+  pragma exception_init(ex_package_already_migrated, -20400);
+  ex_package_parsing_failed exception;
+  pragma exception_init(ex_package_parsing_failed, -20401);
 
   gc_max_output_string_length constant integer := 4000;
   gc_max_input_string_length  constant integer := gc_max_output_string_length - 2; --we need to remove 2 chars for quotes around string
