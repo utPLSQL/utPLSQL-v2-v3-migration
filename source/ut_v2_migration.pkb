@@ -139,6 +139,11 @@ create or replace package body ut_v2_migration is
       exception 
         when ut_utils.ex_package_already_migrated then
           ut_utils.debug_log('[IGNORE] Package ' || rec.owner || '.' || rec.name || ' already migrated');
+          if not a_compile_flag then
+            dbms_output.put('--');
+          end if;
+          dbms_output.put_line('Package ' || rec.owner || '.' || rec.name ||  ' already migrated. Package is skipped');
+          l_items_skipped := l_items_skipped +1;
         when ut_utils.ex_package_parsing_failed then
           ut_utils.debug_log('[ERROR] Package ' || rec.owner || '.' || rec.name || ' parsing failed');
           
