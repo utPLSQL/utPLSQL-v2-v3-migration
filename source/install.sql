@@ -129,15 +129,16 @@ whenever oserror exit failure rollback
 @@legacy/ut_assert.pks
 @@legacy/ut_assert.pkb
 
-@@ut_v2_migration.pks
-@@ut_v2_migration.pkb
+@@migration/ut_v2_migration.pks
+@@migration/ut_v2_migration.pkb
 
 
 prompt Validating installation
 select * from user_errors 
 where name not like 'BIN$%'  --not recycled
 and (name like 'UT%' or name in ('BE_FALSE','BE_LIKE','BE_NOT_NULL','BE_NULL','BE_TRUE','EQUAL','MATCH')) -- utplsql objects
-and attribute = 'ERROR'; -- erors only. ignore warnings
+and attribute = 'ERROR' -- erors only. ignore warnings
+/
 
 declare
   l_cnt integer;
