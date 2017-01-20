@@ -34,7 +34,7 @@ create or replace package body ut_v2_migration is
     end if;
     
     if trim(a_parent_suite) is not null then
-      l_suite_package := chr(10)||'  -- %suitepackage('||trim(a_parent_suite)||')';
+      l_suite_package := chr(10)||'  -- %suitepath('||trim(a_parent_suite)||')';
     end if;
     
     if not regexp_like(l_source,'\A(\s*PACKAGE\s+(\w+\.)?' || l_resolver_object_name || '\s+(AS|IS))','i') then
@@ -57,9 +57,9 @@ create or replace package body ut_v2_migration is
     
       l_repalce_pattern := case upper(rec.procedure_name)
                              when l_setup_proc then
-                              chr(10) || '\2-- %suitesetup' || chr(10) || '\1'
+                              chr(10) || '\2-- %beforeall' || chr(10) || '\1'
                              when l_teardown_proc then
-                              chr(10) || '\2-- %suiteteardown' || chr(10) || '\1'
+                              chr(10) || '\2-- %afterall' || chr(10) || '\1'
                              else
                               chr(10) || '\2-- %test' || chr(10) || '\1'
                            end;
