@@ -7,6 +7,9 @@ set define off
 whenever sqlerror exit failure rollback
 whenever oserror exit failure rollback
 
+def utplsql_v2_owner=&1
+def utplsql_v3_owner=&2
+
 alter session set current_schema = &&utplsql_v3_owner;
 
 drop public synonym ut_assert2;
