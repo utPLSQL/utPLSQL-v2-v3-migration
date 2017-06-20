@@ -42,7 +42,7 @@ before_install:
 
 install:
   - unzip -q utPLSQL.zip
-  - unzip -d ${UTPLSQL_V2_DIR} -q utPLSQL.zip
+  - unzip -d ${UTPLSQL_V2_DIR} -q utplsql-2-3-1.zip
   # unzip utPLSQL-sql-cli to project directory
   - echo $(unzip -d client client.zip && f=(client/*) && mv client/*/* . && rm -rf "${f[@]}")
 
