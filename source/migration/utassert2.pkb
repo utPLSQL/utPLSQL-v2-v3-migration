@@ -2,21 +2,21 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
 
   /************************************************************************
   GNU General Public License for utPLSQL
-  
-  Copyright (C) 2000-2003 
+
+  Copyright (C) 2000-2003
   Steven Feuerstein and the utPLSQL Project
   (steven@stevenfeuerstein.com)
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program (see license.txt); if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,16 +24,16 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
   $Log$
   Revision 1.5  2004/11/16 09:46:48  chrisrimmer
   Changed to new version detection system.
-  
+
   Revision 1.4  2004/07/14 17:01:57  chrisrimmer
   Added first version of pluggable reporter packages
-  
+
   Revision 1.3  2003/07/11 14:32:52  chrisrimmer
   Added 'throws' bugfix from Ivan Desjardins
-  
+
   Revision 1.2  2003/07/01 19:36:46  chrisrimmer
   Added Standard Headers
-  
+
   ************************************************************************/
 
   /* START chrisrimmer 42694 */
@@ -47,7 +47,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     retval number;
   BEGIN
     SELECT id INTO retval FROM ut_assertion WHERE NAME = upper(name_in);
-  
+
     RETURN retval;
   EXCEPTION
     WHEN no_data_found THEN
@@ -58,7 +58,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     retval varchar2;
   BEGIN
     SELECT NAME INTO retval FROM ut_assertion WHERE id = id_in;
-  
+
     RETURN retval;
   EXCEPTION
     WHEN no_data_found THEN
@@ -92,13 +92,31 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
   BEGIN
     /* START chrisrimmer 42694 */
     g_previous_pass := NOT l_failure;
-      
+
     /* END chrisrimmer 42694 */
-    
-    ut.expect(l_failure,a_message => msg_in).to_be_false;
-  
+    IF INSTR( DBMS_UTILITY.FORMAT_CALL_STACK(), 'UT_RUNNER') > 0 THEN
+      ut.expect(l_failure,a_message => msg_in).to_be_false;
+    ELSE
+      IF utplsql2.tracing THEN
+        utreport.pl ('utPLSQL TRACE on Assert: ' || msg_in );
+        utreport.pl ('Results:');
+        utreport.pl (l_failure);
+      END IF;
+
+      -- Report results failure and success
+
+      utresult2.report (
+        outcome_in,
+        l_failure,
+        utplsql.currcase.pkg || '.' || utplsql.currcase.name || ': ' || msg_in,
+        /* 2.0.10.2 Idea from Alistair Bayley msg_in */
+        register_in,
+        showing_results
+      );
+    END IF;
+
     -- Report results failure and success
-  
+
     IF raise_exc_in
        AND l_failure
     THEN
@@ -126,6 +144,40 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
       this(outcome_in, success_msg_in, check_this_in, null_ok_in, raise_exc_in, register_in);
     END IF;
   END;
+
+   -- Convert outcome name to ID.
+   PROCEDURE get_id (
+      outcome_in    IN       ut_outcome.NAME%TYPE,
+      outcome_out   OUT      ut_outcome.id%TYPE
+   )
+   IS
+      l_id   ut_outcome.id%TYPE;
+   BEGIN
+      l_id := utoutcome.id (outcome_in);
+
+      IF l_id IS NULL
+      THEN
+         IF utplsql2.tracing
+         THEN
+            utreport.pl (
+                  'Outcome '
+               || outcome_in
+               || ' is not defined.'
+            );
+         END IF;
+
+         utrerror.oc_report (
+            run_in=> utplsql2.runnum,
+            outcome_in=> NULL,
+            errcode_in=> utrerror.undefined_outcome,
+            errtext_in=>    'Outcome "'
+                         || outcome_in
+                         || '" is not defined.'
+         );
+      ELSE
+         outcome_out := l_id;
+      END IF;
+   END;
 
   FUNCTION expected
   (
@@ -168,13 +220,13 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     RETURN(type_in || ' "' || msg_in || '" Result: ' || value_in);
   END;
 
-  -- 2.0.8 General evaluation mechanism 
+  -- 2.0.8 General evaluation mechanism
   PROCEDURE eval
   (
     outcome_in    IN number
    ,msg_in        IN VARCHAR2
    ,using_in      IN VARCHAR2
-   , -- The expression   
+   , -- The expression
     value_name_in IN value_name_tt
    ,null_ok_in    IN BOOLEAN := FALSE
    ,raise_exc_in  IN BOOLEAN := FALSE
@@ -193,13 +245,13 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
       --utreport.pl (<assertion-specific message>);
       NULL;
     END IF;
-  
+
     FOR indx IN value_name_in.first .. value_name_in.last
     LOOP
       value_name_str := value_name_str || ' ' || nvl(value_name_in(indx).name, 'P' || indx) || ' = ' || value_name_in(indx)
                        .value;
     END LOOP;
-  
+
     eval_description := 'Evaluation of "' || using_in || '" with' || value_name_str;
     eval_block       := 'DECLARE
            b_result BOOLEAN;
@@ -210,7 +262,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
                         'ELSE :result := NULL;
            END IF;
         END;';
-  
+
     BEGIN
       dbms_sql.parse(cur, eval_block, dbms_sql.native);
     EXCEPTION
@@ -220,7 +272,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         THEN
           dbms_sql.close_cursor(cur);
         END IF;
-      
+
         this(outcome_in     => outcome_in
             ,success_msg_in => NULL
             ,failure_msg_in => 'Error ' || SQLCODE || ' parsing ' || eval_block
@@ -229,14 +281,14 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
             ,raise_exc_in   => raise_exc_in);
         RAISE parse_error;
     END;
-  
+
     FOR indx IN value_name_in.first .. value_name_in.last
     LOOP
       dbms_sql.bind_variable(cur
                             ,nvl(value_name_in(indx).name, 'P' || indx)
                             ,value_name_in(indx).value);
     END LOOP;
-  
+
     dbms_sql.bind_variable(cur, 'result', 'a');
     fdbk := dbms_sql.execute(cur);
     dbms_sql.variable_value(cur, 'result', eval_result);
@@ -260,7 +312,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
       THEN
         dbms_sql.close_cursor(cur);
       END IF;
-    
+
       -- Likely the block got too large!
       this(outcome_in     => outcome_in
           ,success_msg_in => NULL
@@ -275,7 +327,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     outcome_in    IN varchar2
    ,msg_in        IN VARCHAR2
    ,using_in      IN VARCHAR2
-   , -- The expression   
+   , -- The expression
     value_name_in IN value_name_tt
    ,null_ok_in    IN BOOLEAN := FALSE
    ,raise_exc_in  IN BOOLEAN := FALSE
@@ -288,7 +340,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
 
   /*
   Template Assertion program
-  
+
   PROCEDURE <name> (
      outcome_in        IN   number,
      msg_in            IN   VARCHAR2,
@@ -303,7 +355,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
        -- Optional trace of assertion call.
         utreport.pl (<assertion-specific message>);
      END IF;
-  
+
      this (
         outcome_in => outcome_in,
         success_msg_in =>
@@ -321,13 +373,13 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         raise_exc_in => raise_exc_in
      );
   END;
-  
+
   You might find the message_expected private program useful in
   constructing your message. Also the replace_not_placeholder and
   c_not_placeholder may come in handy if you want to use the this
   assertion program that accepts just a single message, as many
   of the original assertion programs do.
-  
+
   */
 
   PROCEDURE eq
@@ -344,7 +396,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     THEN
       utreport.pl('EQ Compare "' || check_this_in || '" to "' || against_this_in || '"');
     END IF;
-  
+
     this(outcome_in    => outcome_in
         ,msg_in        => message_expected('EQ', msg_in, check_this_in, against_this_in)
         ,check_this_in => (nvl(check_this_in = against_this_in, FALSE)) OR
@@ -380,7 +432,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     THEN
       utreport.pl('Compare "' || b2v(check_this_in) || '" to "' || b2v(against_this_in) || '"');
     END IF;
-  
+
     this(outcome_in
         ,message_expected('EQ'
                          ,msg_in
@@ -414,12 +466,12 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
       v_check   := to_char(check_this_in, c_format);
       v_against := to_char(against_this_in, c_format);
     END IF;
-  
+
     IF utplsql2.tracing
     THEN
       utreport.pl('Compare "' || v_check || '" to "' || v_against || '"');
     END IF;
-  
+
     this(outcome_in
         ,message_expected('EQ'
                          ,msg_in
@@ -440,7 +492,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
    ,minus_desc_in IN VARCHAR2
    ,raise_exc_in  IN BOOLEAN := FALSE
   ) IS
-    /* >= v8.1 
+    /* >= v8.1
     fdbk      PLS_INTEGER;
     cur       PLS_INTEGER
                         := DBMS_SQL.open_cursor;
@@ -461,7 +513,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     || query1_in
     || '); */
     v_block VARCHAR2(32767) := 'DECLARE
-         CURSOR cur IS 
+         CURSOR cur IS
                SELECT 1
                FROM DUAL
                WHERE EXISTS ((' || ' ( ' || query1_in || ' ) ' ||
@@ -470,13 +522,13 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         (' || ' ( ' || query2_in || ' ) ' || ' MINUS ' || ' ( ' ||
                                query1_in || ' ) ' || '));
           rec cur%ROWTYPE;
-       BEGIN     
+       BEGIN
           OPEN cur;
           FETCH cur INTO rec;
-          IF cur%FOUND 
-      THEN 
+          IF cur%FOUND
+      THEN
          :retval := 1;
-          ELSE 
+          ELSE
          :retval := 0;
           END IF;
           CLOSE cur;
@@ -486,7 +538,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     EXECUTE IMMEDIATE v_block
       USING OUT ival;
     /* >= v9 */
-    /* >= v8.1 
+    /* >= v8.1
     DBMS_SQL.parse (
        cur,
        v_block,
@@ -506,14 +558,14 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     );
     DBMS_SQL.close_cursor (cur);
      >= v8.1 */
-  
+
     this(outcome_in, replace_not_placeholder(msg_in, ival = 0), ival = 0, FALSE, raise_exc_in);
   EXCEPTION
     WHEN OTHERS THEN
-      /* >= v8.1 
+      /* >= v8.1
       DBMS_SQL.close_cursor (cur);
        >= v8.1 */
-    
+
       this(outcome_in
           ,replace_not_placeholder(msg_in || ' SQL Failure: ' || SQLERRM, SQLCODE = 0)
           ,SQLCODE = 0
@@ -541,7 +593,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
        WHERE t.owner = sch_in
          AND t.table_name = tab_in
        ORDER BY column_id;
-  
+
     FUNCTION collist(tab IN VARCHAR2) RETURN VARCHAR2 IS
       l_schema VARCHAR2(100);
       l_table  VARCHAR2(100);
@@ -556,12 +608,12 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         l_schema := upper(substr(tab, 1, l_dot - 1));
         l_table  := upper(substr(tab, l_dot + 1));
       END IF;
-    
+
       FOR rec IN info_cur(l_schema, l_table)
       LOOP
         retval := retval || ',' || rec.column_name;
       END LOOP;
-    
+
       RETURN ltrim(retval, ',');
     END;
   BEGIN
@@ -641,31 +693,31 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
   ) IS
     l_value   VARCHAR2(2000);
     l_success BOOLEAN;
-  
+
     /* >= v9 */
     TYPE cv_t IS REF CURSOR;
-  
+
     cv cv_t;
     /* >= v9 */
-    /* >= v8.1 
+    /* >= v8.1
       cur         PLS_INTEGER
                           := DBMS_SQL.open_cursor;
       fdbk        PLS_INTEGER;
     >= v8.1 */
-  
+
   BEGIN
     IF utplsql2.tracing
     THEN
       utreport.pl('V EQQueryValue Compare "' || check_query_in || '" to "' || against_value_in || '"');
     END IF;
-  
+
     /* >= v9 */
     OPEN cv FOR check_query_in;
     FETCH cv
       INTO l_value;
     CLOSE cv;
     /* >= v9 */
-    /* >= v8.1 
+    /* >= v8.1
     DBMS_SQL.parse (
        cur,
        check_query_in,
@@ -709,31 +761,31 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
   ) IS
     l_value   DATE;
     l_success BOOLEAN;
-  
+
     /* >= v9 */
     TYPE cv_t IS REF CURSOR;
-  
+
     cv cv_t;
     /* >= v9 */
-    /* >= v8.1 
+    /* >= v8.1
       cur         PLS_INTEGER
                           := DBMS_SQL.open_cursor;
       fdbk        PLS_INTEGER;
     >= v8.1 */
-  
+
   BEGIN
     IF utplsql2.tracing
     THEN
       utreport.pl('D EQQueryValue Compare "' || check_query_in || '" to "' || against_value_in || '"');
     END IF;
-  
+
     /* >= v9 */
     OPEN cv FOR check_query_in;
     FETCH cv
       INTO l_value;
     CLOSE cv;
     /* >= v9 */
-    /* >= v8.1 
+    /* >= v8.1
     DBMS_SQL.parse (
        cur,
        check_query_in,
@@ -781,32 +833,32 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
   ) IS
     l_value   NUMBER;
     l_success BOOLEAN;
-  
+
     /* >= v9 */
-  
+
     TYPE cv_t IS REF CURSOR;
-  
+
     cv cv_t;
     /* >= v9 */
-    /* >= v8.1 
+    /* >= v8.1
       cur         PLS_INTEGER
                           := DBMS_SQL.open_cursor;
       fdbk        PLS_INTEGER;
     >= v8.1 */
-  
+
   BEGIN
     IF utplsql2.tracing
     THEN
       utreport.pl('N EQQueryValue Compare "' || check_query_in || '" to "' || against_value_in || '"');
     END IF;
-  
+
     /* >= v9 */
     OPEN cv FOR check_query_in;
     FETCH cv
       INTO l_value;
     CLOSE cv;
     /* >= v9 */
-    /* >= v8.1 
+    /* >= v8.1
     DBMS_SQL.parse (
        cur,
        check_query_in,
@@ -817,7 +869,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     DBMS_SQL.column_value (cur, 1, l_value);
     DBMS_SQL.close_cursor (cur);
      >= v8.1 */
-  
+
     l_success := (l_value = against_value_in) OR
                  (l_value IS NULL AND against_value_in IS NULL AND null_ok_in);
     this(outcome_in
@@ -880,7 +932,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     nth_line     PLS_INTEGER := 1;
     cant_open_check_file   EXCEPTION;
     cant_open_against_file EXCEPTION;
-  
+
     PROCEDURE cleanup
     (
       val         IN BOOLEAN
@@ -915,7 +967,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
       WHEN OTHERS THEN
         RAISE cant_open_check_file;
     END;
-  
+
     BEGIN
       againstid := utl_file.fopen(nvl(against_this_dir_in, check_this_dir_in)
                                  ,against_this_in
@@ -926,7 +978,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
       WHEN OTHERS THEN
         RAISE cant_open_against_file;
     END;
-  
+
     LOOP
       BEGIN
         utl_file.get_line(checkid, checkline);
@@ -934,14 +986,14 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         WHEN no_data_found THEN
           check_eof := TRUE;
       END;
-    
+
       BEGIN
         utl_file.get_line(againstid, againstline);
       EXCEPTION
         WHEN no_data_found THEN
           against_eof := TRUE;
       END;
-    
+
       IF (check_eof AND against_eof)
       THEN
         samefiles := TRUE;
@@ -957,13 +1009,13 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         samefiles := FALSE;
         EXIT;
       END IF;
-    
+
       IF samefiles
       THEN
         nth_line := nth_line + 1;
       END IF;
     END LOOP;
-  
+
     cleanup(samefiles, diffline, diffline_set, nth_line, msg_in);
   EXCEPTION
     WHEN cant_open_check_file THEN
@@ -986,7 +1038,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
   BEGIN
     LOOP
       EXIT WHEN indx IS NULL;
-    
+
       BEGIN
         IF tab1(indx).item_type = 9
         THEN
@@ -1008,7 +1060,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         WHEN OTHERS THEN
           same_out := FALSE;
       END;
-    
+
       EXIT WHEN NOT same_out;
       indx := tab1.next(indx);
     END LOOP;
@@ -1038,18 +1090,18 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     LOOP
       utpipe.receive_and_unpack(check_this_in, check_tab, check_status);
       utpipe.receive_and_unpack(against_this_in, against_tab, against_status);
-    
+
       IF (check_status = 0 AND against_status = 0)
       THEN
         compare_pipe_tabs(check_tab, against_tab, same_message);
-      
+
         IF NOT same_message
         THEN
           msgset := TRUE;
           msgnum := nthmsg;
           EXIT;
         END IF;
-      
+
         EXIT WHEN NOT same_message;
       ELSIF (check_status = 1 AND against_status = 1) -- time out
       THEN
@@ -1059,10 +1111,10 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         same_message := FALSE;
         EXIT;
       END IF;
-    
+
       nthmsg := nthmsg + 1;
     END LOOP;
-  
+
     this(outcome_in
         ,message('EQPIPE'
                 ,msg_in
@@ -1077,7 +1129,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
 
   FUNCTION numfromstr(str IN VARCHAR2) RETURN NUMBER IS
     sqlstr VARCHAR2(1000) := 'begin :val := ' || str || '; end;';
-    /* >= v8.1  
+    /* >= v8.1
     fdbk     PLS_INTEGER;
     cur      PLS_INTEGER
                         := DBMS_SQL.open_cursor;
@@ -1088,7 +1140,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     EXECUTE IMMEDIATE sqlstr
       USING OUT retval;
     /* >= v9 */
-    /* >= v8.1 
+    /* >= v8.1
     DBMS_SQL.parse (
        cur,
        sqlstr,
@@ -1101,7 +1153,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     RETURN retval;
   EXCEPTION
     WHEN OTHERS THEN
-      /* >= v8.1 
+      /* >= v8.1
       DBMS_SQL.close_cursor (cur);
        >= v8.1 */
       RAISE;
@@ -1135,7 +1187,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
   BEGIN
     valid_out      := TRUE;
     null_and_valid := FALSE;
-  
+
     IF numfromstr(check_this_in || '.' || countproc_in) = 0
        AND numfromstr(against_this_in || '.' || countproc_in) = 0
     THEN
@@ -1148,7 +1200,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         null_and_valid := TRUE;
       END IF;
     END IF;
-  
+
     IF valid_out
        AND NOT null_and_valid
     THEN
@@ -1157,7 +1209,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         valid_out := nvl(numfromstr(check_this_in || '.' || firstrowproc_in) =
                          numfromstr(against_this_in || '.' || firstrowproc_in)
                         ,FALSE);
-      
+
         IF NOT valid_out
         THEN
           msg_out := 'Different starting rows in ' || check_this_in || ' and ' || against_this_in;
@@ -1165,20 +1217,20 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
           valid_out := nvl(numfromstr(check_this_in || '.' || lastrowproc_in) !=
                            numfromstr(against_this_in || '.' || lastrowproc_in)
                           ,FALSE);
-        
+
           IF NOT valid_out
           THEN
             msg_out := 'Different ending rows in ' || check_this_in || ' and ' || against_this_in;
           END IF;
         END IF;
       END IF;
-    
+
       IF valid_out
       THEN
         valid_out := nvl(numfromstr(check_this_in || '.' || countproc_in) =
                          numfromstr(against_this_in || '.' || countproc_in)
                         ,FALSE);
-      
+
         IF NOT valid_out
         THEN
           msg_out := 'Different number of rows in ' || check_this_in || ' and ' || against_this_in;
@@ -1207,7 +1259,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
       v_check   := v_check || '.' || getvalfunc_in;
       v_against := v_against || '.' || getvalfunc_in;
     END IF;
-  
+
     IF eqfunc_in IS NULL
     THEN
       eqcheck := '(' || v_check || '(cindx) = ' || v_against || ' (aindx)) OR ' || '(' || v_check ||
@@ -1215,7 +1267,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     ELSE
       eqcheck := eqfunc_in || '(' || v_check || '(cindx), ' || v_against || '(aindx))';
     END IF;
-  
+
     RETURN('DECLARE
              cindx PLS_INTEGER;
              aindx PLS_INTEGER;
@@ -1226,8 +1278,8 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
 
              PROCEDURE setfailure (
                 str IN VARCHAR2,
-                badc IN PLS_INTEGER, 
-                bada IN PLS_INTEGER, 
+                badc IN PLS_INTEGER,
+                bada IN PLS_INTEGER,
                 raiseexc IN BOOLEAN := TRUE)
              IS
              BEGIN
@@ -1241,21 +1293,21 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
              aindx := NVL (:astartit, ' || against_this_in || '.' || firstrowproc_in || ');
 
              LOOP
-                IF cindx IS NULL AND aindx IS NULL 
+                IF cindx IS NULL AND aindx IS NULL
                 THEN
                    EXIT;
-                   
+
                 ELSIF cindx IS NULL and aindx IS NOT NULL
                 THEN
                    setfailure (
                       ''Check index NULL, Against index NOT NULL'', cindx, aindx);
-                   
+
                 ELSIF aindx IS NULL
-                THEN   
+                THEN
                    setfailure (
                       ''Check index NOT NULL, Against index NULL'', cindx, aindx);
                 END IF;
-                
+
                 IF :matchit = ''Y''
                    AND cindx != aindx
                 THEN
@@ -1274,13 +1326,13 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
                    THEN
                       setfailure (''On EQ check: ' || eqcheck || ''' || '' '' || SQLERRM, cindx, aindx);
                 END;
-                
+
                 cindx := ' || check_this_in || '.' || nextrowproc_in ||
            '(cindx);
                 aindx := ' || against_this_in || '.' || nextrowproc_in || '(aindx);
              END LOOP;
           EXCEPTION
-             WHEN OTHERS THEN 
+             WHEN OTHERS THEN
                 IF :badcindx IS NULL and :badaindx IS NULL
                 THEN setfailure (SQLERRM, cindx, aindx, FALSE);
                 END IF;
@@ -1303,7 +1355,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     THEN
       assert_name := 'EQCOLLAPI';
     END IF;
-  
+
     RETURN message(assert_name
                   ,msg_in
                   ,utplsql.ifelse(success_in
@@ -1340,12 +1392,12 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     bada                PLS_INTEGER;
     badtext             VARCHAR2(32767);
     null_and_valid      BOOLEAN := FALSE;
-    /* >= v8.1  
+    /* >= v8.1
       fdbk                  PLS_INTEGER;
       cur                   PLS_INTEGER
                           := DBMS_SQL.open_cursor;
     >= v8.1 */
-  
+
   BEGIN
     validatecoll(msg_in
                 ,check_this_in
@@ -1363,7 +1415,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
                 ,null_ok_in
                 ,raise_exc_in
                 ,null_and_valid);
-  
+
     IF NOT valid_interim
     THEN
       -- Failure on interim step. Flag and skip rest of processing
@@ -1387,7 +1439,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         THEN
           v_matchrow := 'Y';
         END IF;
-      
+
         dynblock := dyncollstr(check_this_in
                               ,against_this_in
                               ,eqfunc_in
@@ -1400,7 +1452,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         EXECUTE IMMEDIATE dynblock
           USING IN check_endrow_in, IN against_endrow_in, IN OUT badc, IN OUT bada, IN OUT badtext, IN check_startrow_in, IN against_startrow_in, IN v_matchrow;
         /* >= v9 */
-        /* >= v8.1 
+        /* >= v8.1
           DBMS_SQL.parse (
              cur,
              dynblock,
@@ -1450,7 +1502,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
           DBMS_SQL.close_cursor (cur);
         >= v8.1 */
       END IF;
-    
+
       this(outcome_in
           ,collection_message(FALSE
                              ,msg_in
@@ -1467,10 +1519,10 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
   EXCEPTION
     WHEN OTHERS THEN
       --p.l (sqlerrm);
-      /* >= v8.1 
+      /* >= v8.1
       DBMS_SQL.close_cursor (cur);
        >= v8.1 */
-    
+
       this(outcome_in
           ,collection_message(FALSE
                              ,msg_in || ' SQLERROR: ' || SQLERRM
@@ -1514,12 +1566,12 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     valid_interim       BOOLEAN;
     invalid_interim_msg VARCHAR2(4000);
     null_and_valid      BOOLEAN := FALSE;
-    /* >= v8.1  
+    /* >= v8.1
       fdbk                  PLS_INTEGER;
       cur                   PLS_INTEGER
                           := DBMS_SQL.open_cursor;
     >= v8.1 */
-  
+
   BEGIN
     validatecoll(msg_in
                 ,check_this_pkg_in
@@ -1537,17 +1589,17 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
                 ,null_ok_in
                 ,raise_exc_in
                 ,null_and_valid);
-  
+
     IF null_and_valid
     THEN
       GOTO normal_termination;
     END IF;
-  
+
     IF match_rownum_in
     THEN
       v_matchrow := 'Y';
     END IF;
-  
+
     dynblock := dyncollstr(check_this_pkg_in
                           ,against_this_pkg_in
                           ,eqfunc_in
@@ -1560,7 +1612,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     EXECUTE IMMEDIATE dynblock
       USING IN check_endrow_in, IN against_endrow_in, IN OUT badc, IN OUT bada, IN OUT badtext, IN check_startrow_in, IN against_startrow_in, IN v_matchrow;
     /* >= v9 */
-    /* >= v8.1 
+    /* >= v8.1
     DBMS_SQL.parse (
        cur,
        dynblock,
@@ -1608,9 +1660,9 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
        badtext
     );
     DBMS_SQL.close_cursor (cur);
-    
+
      >= v8.1 */
-  
+
     <<normal_termination>>
     this(outcome_in
         ,collection_message(TRUE
@@ -1627,10 +1679,10 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
   EXCEPTION
     WHEN OTHERS THEN
       --p.l (sqlerrm);
-      /* >= v8.1 
+      /* >= v8.1
       DBMS_SQL.close_cursor (cur);
        >= v8.1 */
-    
+
       this(outcome_in
           ,collection_message(TRUE
                              ,msg_in || ' SQLERROR: ' || SQLERRM
@@ -1723,7 +1775,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
                    :indicator := ' || expected_indicator || ';
                 WHEN OTHERS THEN :indicator := SQLCODE;
              END;';
-    /* >= v8.1 
+    /* >= v8.1
       cur                  PLS_INTEGER
                           := DBMS_SQL.open_cursor;
       ret_val              PLS_INTEGER;
@@ -1734,7 +1786,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     EXECUTE IMMEDIATE v_block
       USING OUT l_indicator;
     /* >= v9 */
-    /* >= v8.1 
+    /* >= v8.1
     DBMS_SQL.parse (
        cur,
        v_block,
@@ -1749,7 +1801,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     );
     DBMS_SQL.close_cursor (cur);
      >= v8.1 */
-  
+
     this(outcome_in
         ,message('RAISES'
                 ,msg_in
@@ -1781,7 +1833,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
                                           ' THEN :indicator := ' || expected_indicator || ';' ||
                                           ' ELSE :indicator := SQLCODE; END IF;
              END;';
-    /* >= v8.1 
+    /* >= v8.1
       cur                  PLS_INTEGER
                           := DBMS_SQL.open_cursor;
       ret_val              PLS_INTEGER;
@@ -1792,7 +1844,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     EXECUTE IMMEDIATE v_block
       USING OUT l_indicator;
     /* >= v9 */
-    /* >= v8.1 
+    /* >= v8.1
     DBMS_SQL.parse (
        cur,
        v_block,
@@ -1807,7 +1859,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     );
     DBMS_SQL.close_cursor (cur);
      >= v8.1 */
-  
+
     this(outcome_in
         ,message('THROWS'
                 ,msg_in
@@ -2249,7 +2301,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
    ,raise_exc_in IN BOOLEAN := FALSE
   ) IS
     checkid utl_file.file_type;
-  
+
     PROCEDURE cleanup
     (
       val    IN BOOLEAN
@@ -2301,7 +2353,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     v_point    NUMBER := instr(check_this_in, '.');
     v_state    BOOLEAN := FALSE;
     v_val      VARCHAR2(30);
-  
+
     CURSOR c_obj IS
       SELECT object_name
         FROM all_objects
@@ -2316,18 +2368,18 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
       v_schema   := substr(check_this_in, 0, (v_point - 1));
       v_obj_name := substr(check_this_in, (v_point + 1));
     END IF;
-  
+
     OPEN c_obj;
     FETCH c_obj
       INTO v_val;
-  
+
     IF c_obj%FOUND
     THEN
       v_state := TRUE;
     ELSE
       v_state := FALSE;
     END IF;
-  
+
     CLOSE c_obj;
     RETURN v_state;
   EXCEPTION
@@ -2349,7 +2401,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
       -- Optional trace of assertion call.
       utreport.pl('verfying that the object "' || check_this_in || '"exists');
     END IF;
-  
+
     this(outcome_in
         ,message(msg_in, check_this_in, 'This object Exists')
         ,message(msg_in, check_this_in, 'This object does not Exist')
@@ -2373,7 +2425,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
       -- Optional trace of assertion call.
       utreport.pl('verifying that the object "' || check_this_in || '"does not exist');
     END IF;
-  
+
     this(outcome_in
         ,message(msg_in, check_this_in, 'This object does not Exist')
         ,message(msg_in, check_this_in, 'This object Exists')
@@ -2415,7 +2467,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     v_line2         VARCHAR2(1000);
     whitespace   CONSTANT CHAR(5) := '!' || chr(9) || chr(10) || chr(13) || chr(32);
     nowhitespace CONSTANT CHAR(1) := '!';
-  
+
     FUNCTION preview_line(line_in VARCHAR2) RETURN VARCHAR2 IS
     BEGIN
       IF length(line_in) <= 100
@@ -2425,31 +2477,31 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         RETURN substr(line_in, 1, 97) || '...';
       END IF;
     END;
-  
+
   BEGIN
     v_check_index   := check_this_in.first;
     v_against_index := against_this_in.first;
-  
+
     WHILE v_check_index IS NOT NULL
           AND v_against_index IS NOT NULL
           AND v_message IS NULL
     LOOP
-    
+
       v_line1 := check_this_in(v_check_index);
       v_line2 := against_this_in(v_against_index);
-    
+
       IF ignore_case_in
       THEN
         v_line1 := upper(v_line1);
         v_line2 := upper(v_line2);
       END IF;
-    
+
       IF ignore_whitespace_in
       THEN
         v_line1 := translate(v_line1, whitespace, nowhitespace);
         v_line2 := translate(v_line2, whitespace, nowhitespace);
       END IF;
-    
+
       IF (nvl(v_line1 <> v_line2, NOT null_ok_in))
       THEN
         v_message := message_expected('EQOUTPUT'
@@ -2459,11 +2511,11 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
                      ' (Comparing line ' || v_check_index || ' of tested collection against line ' ||
                      v_against_index || ' of reference collection)';
       END IF;
-    
+
       v_check_index   := check_this_in.next(v_check_index);
       v_against_index := against_this_in.next(v_against_index);
     END LOOP;
-  
+
     IF v_message IS NULL
     THEN
       IF v_check_index IS NULL
@@ -2482,14 +2534,14 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
                              preview_line(check_this_in(v_check_index)));
       END IF;
     END IF;
-  
+
     this(outcome_in
         ,nvl(v_message, message('EQOUTPUT', msg_in, 'Collections Match'))
         ,v_message IS NULL
         ,FALSE
         ,raise_exc_in
         ,TRUE);
-  
+
   END;
 
   PROCEDURE eqoutput
@@ -2532,12 +2584,12 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     l_against_this  VARCHAR2(2000) := against_this_in;
     l_delimiter_pos BINARY_INTEGER;
   BEGIN
-  
+
     IF line_delimiter_in IS NULL
     THEN
       l_against_this := REPLACE(l_against_this, chr(13) || chr(10), chr(10));
     END IF;
-  
+
     WHILE l_against_this IS NOT NULL
     LOOP
       l_delimiter_pos := instr(l_against_this, nvl(line_delimiter_in, chr(10)));
@@ -2555,7 +2607,7 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
         END IF;
       END IF;
     END LOOP;
-  
+
     eqoutput(outcome_in
             ,msg_in
             ,check_this_in
