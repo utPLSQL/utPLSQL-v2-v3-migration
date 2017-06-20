@@ -16,4 +16,7 @@ alter user utp quota unlimited on users;
 exit
 SQL
 
-sqlplus -S -L utp/utp @ut_i_do.sql install
+sqlplus -S -L utp/utp <<SQL
+@ut_i_do.sql install
+exit
+SQL
