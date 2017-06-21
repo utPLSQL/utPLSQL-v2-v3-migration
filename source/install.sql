@@ -1,4 +1,4 @@
-prompt Installing utplsql v2-v3 bridge and migration utility
+prompt Installing utplsql v2-v3 migration utility
 
 set serveroutput on size unlimited
 set timing off
@@ -6,8 +6,8 @@ set timing off
 whenever sqlerror exit failure rollback
 whenever oserror exit failure rollback
 
-def utplsql_v2_owner=&1
-def utplsql_v3_owner=&2
+define utplsql_v2_owner=&1
+define utplsql_v3_owner=&2
 
 alter session set current_schema = &&utplsql_v3_owner;
 
