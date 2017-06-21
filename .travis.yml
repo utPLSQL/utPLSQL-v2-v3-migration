@@ -30,22 +30,23 @@ env:
     - UTPLSQL_DIR="utPLSQL"
     - UTPLSQL_V2_DIR="utPLSQL_V2"
 before_install:
-  - npm install -g phantomjs-prebuilt casperjs
+  # download travis-oracle
+  - wget 'https://github.com/cbandy/travis-oracle/archive/v2.0.2.tar.gz'
+  - mkdir -p .travis/oracle
+  - tar x -C .travis/oracle --strip-components=1 -f v2.0.2.tar.gz
   # download latest utPLSQL release
   - curl -LOk $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/latest | awk '/browser_download_url/ { print $2 }' | grep ".zip" | sed 's/"//g')
+  - unzip -q utPLSQL.zip
   # download utPLSQL v.2.3.1 release
   - curl -LOk $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/3608515 | awk '/browser_download_url/ { print $2 }' | grep ".zip" | sed 's/"//g')
+  - unzip -d ${UTPLSQL_V2_DIR} -q utplsql-2-3-1.zip
   # download utPLSQL-sql-cli
   - curl -Lk -o client.zip $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL-sql-cli/releases/latest | awk '/zipball_url/ { print $2 }' | sed -r 's/"|,//g')
+  - echo $(unzip -d client client.zip && f=(client/*) && mv client/*/* . && rm -rf "${f[@]}")
   # download Oracle XE installer for Travis
   - .travis/oracle/download.sh
 
 install:
-  - unzip -q utPLSQL.zip
-  - unzip -d ${UTPLSQL_V2_DIR} -q utplsql-2-3-1.zip
-  # unzip utPLSQL-sql-cli to project directory
-  - echo $(unzip -d client client.zip && f=(client/*) && mv client/*/* . && rm -rf "${f[@]}")
-
   # Install Oracle Database
   - .travis/oracle/install.sh
   # Install utPLSQL v3
