@@ -2,7 +2,6 @@ prompt Installing utplsql v2-v3 bridge and migration utility
 
 set serveroutput on size unlimited
 set timing off
-set define off
 
 whenever sqlerror exit failure rollback
 whenever oserror exit failure rollback
