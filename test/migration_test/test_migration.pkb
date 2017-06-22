@@ -116,6 +116,7 @@ end;
   end;
 
   procedure ut_v2_migration_success is
+    pragma autonomous_transaction;
   begin
     --act
     ut_v2_migration.migrate_v2_packages(user);
