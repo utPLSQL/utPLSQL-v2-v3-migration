@@ -19,7 +19,7 @@ end;]';
   procedure ut_bad_test;
 end;
 ]';
-  gc_test_package_body varchar2(32767) := q'[create or replace package body test_betwnstr as
+  gc_test_package_body varchar2(32767) := q'[create or replace package body ut_betwnstr as
   procedure ut_setup is begin null; end;
   procedure ut_teardown is begin null; end;
   procedure ut_normal_case is
@@ -36,7 +36,7 @@ end;
   end;
   procedure ut_null_string is
   begin
-    utassert.eq( 'Returns null for null input string value', betwnstr( null, 2, 5 ) ).to_( be_null() );
+    utassert.isnull( 'Returns null for null input string value', betwnstr( null, 2, 5 ) );
   end;
   procedure ut_bad_params is
   begin
@@ -58,11 +58,26 @@ end;
     execute immediate gc_test_package_body;
   end;
 
+  procedure remove_ut_v2_execution is
+  begin
+    utpackage.rem(to_number(null),'UT_BETWNSTR');
+  end;
+
   procedure drop_ut_v2_package is
     pragma autonomous_transaction;
   begin
-    execute immediate q'[drop package ut_betwnstr]';
-    execute immediate q'[drop function betwnstr]';
+    begin
+      execute immediate q'[drop package ut_betwnstr]';
+    exception
+      when others then
+        null;
+    end;
+    begin
+      execute immediate q'[drop function betwnstr]';
+    exception
+      when others then
+        null;
+    end;
   end;
 
   procedure execute_ut_v2_betwnstr is
@@ -76,20 +91,40 @@ end;
     --act
     ut_v2_migration.migrate_v2_packages(user);
     --assert
-
+    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).not_to_match('-- %suite');
+    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).not_to_match('-- %test');
+    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).not_to_match('-- %beforeall');
+    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).not_to_match('-- %afterall');
   end;
 
   procedure ut_v2_dropped_package is
+    l_sqlcode integer;
     pragma autonomous_transaction;
   begin
     --arrange
     drop_ut_v2_package;
     --act
-    ut_v2_migration.migrate_v2_packages(user);
-    --assert
-
+    begin
+      dbms_output.disable;
+      ut_v2_migration.migrate_v2_packages(user);
+      dbms_output.enable;
+    exception
+      when others then
+        l_sqlcode := sqlcode;
+    end;
+    ut.expect(l_sqlcode).to_be_null;
   end;
 
+  procedure ut_v2_migration_success is
+  begin
+    --act
+    ut_v2_migration.migrate_v2_packages(user);
+    --assert
+    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).to_match('-- %suite');
+    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).to_match('-- %test');
+    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).to_match('-- %beforeall');
+    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).to_match('-- %afterall');
+  end;
 
 end;
 /

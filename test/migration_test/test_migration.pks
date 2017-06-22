@@ -8,16 +8,21 @@ create or replace package test_migration as
   -- %aftereach
   procedure drop_ut_v2_package;
 
+  procedure remove_ut_v2_execution;
+
   procedure execute_ut_v2_betwnstr;
 
   -- %test(Does not migrate unit tests that were not executed)
+  -- %beforetest(remove_ut_v2_execution)
   procedure ut_v2_with_no_executions;
 
-  -- %test(Does not migrate unit tests that don't exist)
+  -- %test(Does not raise exception when migrating an executed unit test package that doesn't exist)
   -- %beforetest(execute_ut_v2_betwnstr)
-  -- %aftertest(create_ut_v2_package)
   procedure ut_v2_dropped_package;
 
+  -- %test(Migrates an existing and executed unit test package)
+  -- %beforetest(execute_ut_v2_betwnstr)
+  procedure ut_v2_migration_success;
 
 end;
 /

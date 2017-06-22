@@ -13,6 +13,7 @@ grant create session, create table, create procedure,
   drop public synonym to utp;
 
 alter user utp quota unlimited on users;
+grant execute on utl_file to utp;
 exit
 SQL
 
