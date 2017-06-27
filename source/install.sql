@@ -74,13 +74,13 @@ drop public synonym utassert2;
 drop public synonym utassert;
 
 set echo off
-@@install_component.sql 'migration/utassert2.pks'
-@@install_component.sql 'migration/utassert.pks'
-@@install_component.sql 'migration/ut_v2_migration.pks'
+@@install_component.sql 'migration/ut3.utassert2.pks'
+@@install_component.sql 'migration/ut3.utassert.pks'
+@@install_component.sql 'migration/ut3.ut_v2_migration.pks'
 
-@@install_component.sql 'migration/utassert2.pkb'
-@@install_component.sql 'migration/utassert.pkb'
-@@install_component.sql 'migration/ut_v2_migration.pkb'
+@@install_component.sql 'migration/ut3.utassert2.pkb'
+@@install_component.sql 'migration/ut3.utassert.pkb'
+@@install_component.sql 'migration/ut3.ut_v2_migration.pkb'
 
 set echo on
 create or replace public synonym utassert  for &&utplsql_v2_owner..utassert;

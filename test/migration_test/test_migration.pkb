@@ -50,6 +50,11 @@ end;
 end;
 ]';
 
+  procedure coverage_in_develop_mode is
+  begin
+    ut3.ut_coverage.coverage_start_develop();
+  end;
+
   procedure create_ut_v2_package is
     pragma autonomous_transaction;
   begin

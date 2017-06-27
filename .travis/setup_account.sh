@@ -7,6 +7,8 @@ create user ${DB_USER} identified by ${DB_PASS} quota unlimited on USERS default
 
 grant create session, create procedure, create type, create table, create sequence, create view to ${DB_USER};
 grant select any dictionary to ${DB_USER};
+--needed to execute coverage report
+grant create any procedure to ${DB_USER};
 
 exit
 SQL

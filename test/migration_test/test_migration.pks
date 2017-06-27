@@ -2,6 +2,9 @@ create or replace package test_migration as
 
   -- %suite(Test migration of utPLSQL v2 package into utPLSQL v3 package)
 
+  -- %beforeall
+  procedure coverage_in_develop_mode;
+
   -- %beforeeach
   procedure create_ut_v2_package;
 
