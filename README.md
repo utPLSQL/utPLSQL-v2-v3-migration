@@ -1,5 +1,5 @@
 [![build](https://img.shields.io/travis/utPLSQL/utPLSQL-v2-v3-bridge/master.svg?label=master%20branch)](https://travis-ci.org/utPLSQL/utPLSQL-v2-v3-bridge)
-[![sonar](https://sonarqube.com/api/badges/gate?key=utPLSQL%3AutPLSQL%3master)](https://sonarqube.com/dashboard/index?id=utPLSQL%3AutPLSQL%3Adevelop)
+[![sonar](https://sonarqube.com/api/badges/gate?key=utPLSQL%3AutPLSQL-v2-v3-bridge)](https://sonarqube.com/dashboard/index?id=id=utPLSQL%3AutPLSQL-v2-v3-bridge)
 
 # utPLSQL v2 to v3 migration utility
 
