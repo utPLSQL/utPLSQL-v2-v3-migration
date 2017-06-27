@@ -50,9 +50,14 @@ end;
 end;
 ]';
 
-  procedure coverage_in_develop_mode is
+  procedure coverage_develop_start is
   begin
     ut3.ut_coverage.coverage_start_develop();
+  end;
+
+  procedure coverage_develop_stop is
+  begin
+    ut3.ut_coverage.coverage_stop_develop();
   end;
 
   procedure create_ut_v2_package is
