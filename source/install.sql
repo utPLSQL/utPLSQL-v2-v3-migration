@@ -6,7 +6,6 @@ set verify off
 set heading off
 set linesize 1000
 set pagesize 0
-set feedback off
 set echo off
 set termout off
 set serveroutput on size unlimited format truncated
