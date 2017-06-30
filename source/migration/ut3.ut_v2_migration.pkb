@@ -1,5 +1,22 @@
 create or replace package body ut_v2_migration is
 
+  /*
+  utPLSQL v2 migration
+  Copyright 2017 utPLSQL Project
+
+  Licensed under the Apache License, Version 2.0 (the "License"):
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  */
+
   procedure upgrade_v2_package_spec(a_owner_name varchar2, a_packge_name varchar2, a_package_desc varchar2, a_package_prefix varchar2, a_parent_suite varchar2, a_compile_flag boolean) is
     l_resolved_owner       varchar2(128 char);
     l_resolved_object_name varchar2(128 char);
@@ -81,12 +98,7 @@ create or replace package body ut_v2_migration is
 
   end upgrade_v2_package_spec;
 
-  procedure migrate_v2_packages(a_compile_flag boolean default true) is
-  begin
-    migrate_v2_packages(a_owner_name => null, a_package_name => null, a_compile_flag => a_compile_flag);
-  end;
-
-  procedure migrate_v2_packages(a_owner_name varchar2, a_package_name varchar2 := null, a_compile_flag boolean := true) is
+  procedure migrate_v2_packages(a_owner_name varchar2 := null, a_package_name varchar2 := null, a_suite_name varchar2 := null, a_compile_flag boolean := true) is
     l_items_processed pls_integer := 0;
     l_items_succeeded pls_integer := 0;
     l_items_skipped pls_integer := 0;
@@ -119,6 +131,7 @@ create or replace package body ut_v2_migration is
                    and o.object_type in ('PACKAGE')
                    and p.owner = nvl(a_owner_name, p.owner)
                    and p.name = nvl(a_package_name, p.name)
+                   and (s.name = a_suite_name or a_suite_name is null)
                    and upper(p.name) like upper(nvl(p.prefix, c.prefix))||'%'
     ) loop
       begin
@@ -140,7 +153,7 @@ create or replace package body ut_v2_migration is
           if not a_compile_flag then
             dbms_output.put('--');
           end if;
-          dbms_output.put_line('INVALID package ' || rec.owner || '.' || rec.name ||  ' was skipped');
+          dbms_output.put_line('Package ' || rec.owner || '.' || rec.name ||  ' is in invalid state - skipping');
           l_items_skipped := l_items_skipped +1;
         end if;
 
@@ -175,6 +188,36 @@ create or replace package body ut_v2_migration is
                          || (l_items_processed - l_items_succeeded - l_items_skipped) || ' - errors.');
     dbms_output.put_line('------------------');
 
+  end;
+
+  procedure dry_run(a_owner varchar2, a_package varchar2 := null) is
+  begin
+    migrate_v2_packages(a_owner_name => a_owner, a_package_name => a_package, a_compile_flag => false);
+  end;
+
+  procedure dry_run_for_suite(a_suite_name varchar2) is
+  begin
+    migrate_v2_packages( a_suite_name => a_suite_name, a_compile_flag => false);
+  end;
+
+  procedure dry_run_all is
+  begin
+    migrate_v2_packages(a_compile_flag => false);
+  end;
+
+  procedure run(a_owner varchar2, a_package varchar2 := null) is
+  begin
+    migrate_v2_packages(a_owner_name => a_owner, a_package_name => a_package);
+  end;
+
+  procedure run_for_suite(a_suite_name varchar2) is
+  begin
+    migrate_v2_packages(a_suite_name => a_suite_name);
+  end;
+
+  procedure run_all is
+  begin
+    migrate_v2_packages();
   end;
 
 end ut_v2_migration;

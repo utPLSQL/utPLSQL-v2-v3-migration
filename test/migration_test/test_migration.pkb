@@ -8,44 +8,33 @@ begin
   end if;
   return substr( a_string, l_start_pos, a_end_pos - l_start_pos + 1);
 end;]';
-  gc_test_package varchar2(32767) := q'[create or replace package ut_betwnstr as
+  gc_ut_betwnstr_package varchar2(32767) := q'[create or replace package ut_betwnstr as
   procedure ut_setup;
   procedure ut_teardown;
   procedure ut_normal_case;
-  procedure ut_zero_start_position;
-  procedure ut_big_end_position;
-  procedure ut_null_string;
-  procedure ut_bad_params;
-  procedure ut_bad_test;
 end;
 ]';
-  gc_test_package_body varchar2(32767) := q'[create or replace package body ut_betwnstr as
+  gc_ut_betwnstr_body varchar2(32767) := q'[create or replace package body ut_betwnstr as
   procedure ut_setup is begin null; end;
   procedure ut_teardown is begin null; end;
   procedure ut_normal_case is
   begin
     utassert.eq( 'Returns substring from start position to end position',betwnstr( '1234567', 2, 5 ), '2345');
   end;
-  procedure ut_zero_start_position is
+end;
+]';
+  gc_ut_betwnstr_new_package varchar2(32767) := q'[create or replace package ut_betwnstr_new as
+  procedure ut_setup;
+  procedure ut_teardown;
+  procedure ut_normal_case;
+end;
+]';
+  gc_ut_betwnstr_new_body varchar2(32767) := q'[create or replace package body ut_betwnstr_new as
+  procedure ut_setup is begin null; end;
+  procedure ut_teardown is begin null; end;
+  procedure ut_normal_case is
   begin
-    utassert.eq( 'Returns substring when start position is zero', betwnstr( '1234567', 0, 5 ), '12345');
-  end;
-  procedure ut_big_end_position is
-  begin
-    utassert.eq( 'Returns string until end if end position is greater than string length', betwnstr( '1234567', 0, 500 ), '1234567') ;
-  end;
-  procedure ut_null_string is
-  begin
-    utassert.isnull( 'Returns null for null input string value', betwnstr( null, 2, 5 ) );
-  end;
-  procedure ut_bad_params is
-  begin
-    utassert.isnull( 'A demo of test raising runtime exception', betwnstr( '1234567', 'a', 'b' ) );
-  end;
-  procedure ut_bad_test
-  is
-  begin
-    utassert.eq( 'A demo of failing test', betwnstr( '1234567', 0, 500 ), '1');
+    utassert.eq( 'Returns substring from start position to end position',betwnstr( '1234567', 2, 5 ), '2345');
   end;
 end;
 ]';
@@ -60,51 +49,68 @@ end;
     ut3.ut_coverage.coverage_stop_develop();
   end;
 
-  procedure create_ut_v2_package is
+  procedure create_ut_v2_packages is
     pragma autonomous_transaction;
   begin
     execute immediate gc_tested_function;
-    execute immediate gc_test_package;
-    execute immediate gc_test_package_body;
+    execute immediate gc_ut_betwnstr_package;
+    execute immediate gc_ut_betwnstr_body;
+    execute immediate gc_ut_betwnstr_new_package;
+    execute immediate gc_ut_betwnstr_new_body;
+    dbms_output.put_line('create_ut_v2_packages');
   end;
 
-  procedure remove_ut_v2_execution is
-  begin
-    utpackage.rem(to_number(null),'UT_BETWNSTR');
-  end;
-
-  procedure drop_ut_v2_package is
+  procedure remove_ut_v2_executions is
     pragma autonomous_transaction;
   begin
-    begin
-      execute immediate q'[drop package ut_betwnstr]';
-    exception
-      when others then
-        null;
-    end;
-    begin
-      execute immediate q'[drop function betwnstr]';
-    exception
-      when others then
-        null;
-    end;
+    dbms_output.put_line('remove_ut_v2_executions');
+    utpackage.rem(to_number(null),'UT_BETWNSTR');
+    utpackage.rem(to_number(null),'UT_BETWNSTR_NEW');
+    utSuite.rem('MIGRATION');
+    commit;
   end;
 
-  procedure execute_ut_v2_betwnstr is
+  procedure drop_ut_v2_packages is
+    pragma autonomous_transaction;
+    procedure exec(p_what varchar2) is
+    begin
+      execute immediate p_what;
+    exception
+      when others then
+        null;
+    end;
+
   begin
+    dbms_output.put_line('drop_ut_v2_packages');
+    exec('drop package ut_betwnstr');
+    exec('drop package ut_betwnstr_new');
+    exec('drop function betwnstr');
+    remove_ut_v2_executions;
+  end;
+
+  procedure register_ut_v2_packages is
+    pragma autonomous_transaction;
+  begin
+    dbms_output.put_line('register_ut_v2_packages');
     utplsql.run('UT_BETWNSTR');
+    utSuite.add ('MIGRATION');
+    utPackage.add('MIGRATION', 'UT_BETWNSTR_NEW');
+    utplsql.testsuite ('MIGRATION');
+    commit;
   end;
 
   procedure ut_v2_with_no_executions is
     pragma autonomous_transaction;
+    l_package clob;
   begin
     --act
-    ut_v2_migration.migrate_v2_packages(user);
+    ut_v2_migration.run(user);
     --assert
-    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).not_to_match('-- %suite');
-    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).not_to_match('-- %test');
-    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).not_to_match('-- %beforeall');
-    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).not_to_match('-- %afterall');
+    l_package := dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR');
+    ut.expect( l_package ).not_to_match('-- %suite');
+    ut.expect( l_package ).not_to_match('-- %test');
+    ut.expect( l_package ).not_to_match('-- %beforeall');
+    ut.expect( l_package ).not_to_match('-- %afterall');
   end;
 
   procedure ut_v2_dropped_package is
@@ -112,11 +118,11 @@ end;
     pragma autonomous_transaction;
   begin
     --arrange
-    drop_ut_v2_package;
+    drop_ut_v2_packages;
     --act
     begin
       dbms_output.disable;
-      ut_v2_migration.migrate_v2_packages(user);
+      ut_v2_migration.run(user);
       dbms_output.enable;
     exception
       when others then
@@ -125,16 +131,64 @@ end;
     ut.expect(l_sqlcode).to_be_null;
   end;
 
-  procedure ut_v2_migration_success is
+  procedure ut_v2_migration_one_pkg is
     pragma autonomous_transaction;
+    l_package clob;
   begin
     --act
-    ut_v2_migration.migrate_v2_packages(user);
+    ut_v2_migration.run(user, 'UT_BETWNSTR');
     --assert
-    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).to_match('-- %suite');
-    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).to_match('-- %test');
-    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).to_match('-- %beforeall');
-    ut.expect( dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR') ).to_match('-- %afterall');
+    l_package := dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR');
+    ut.expect( l_package ).to_match('-- %suite');
+    ut.expect( l_package ).not_to_match('-- %suitepath');
+    ut.expect( l_package ).to_match('-- %test');
+    ut.expect( l_package ).to_match('-- %beforeall');
+    ut.expect( l_package ).to_match('-- %afterall');
+    l_package := dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR_NEW');
+    ut.expect( l_package ).not_to_match('-- %suite');
+  end;
+
+  procedure ut_v2_migration_one_suite is
+    pragma autonomous_transaction;
+    l_package clob;
+  begin
+    --act
+    ut_v2_migration.run_for_suite('MIGRATION');
+    --assert
+    l_package := dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR_NEW');
+    ut.expect( l_package ).to_match('-- %suite');
+    ut.expect( l_package ).to_match('-- %suitepath(MIGRATION)');
+    ut.expect( l_package ).to_match('-- %test');
+    ut.expect( l_package ).to_match('-- %beforeall');
+    ut.expect( l_package ).to_match('-- %afterall');
+    l_package := dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR');
+    ut.expect( l_package ).not_to_match('-- %suite');
+  end;
+
+  procedure ut_v2_migration_one_schema is
+    pragma autonomous_transaction;
+    l_package clob;
+  begin
+    --act
+    ut_v2_migration.run(USER);
+    --assert
+    l_package := dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR_NEW');
+    ut.expect( l_package ).to_match('-- %suite');
+    l_package := dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR');
+    ut.expect( l_package ).to_match('-- %suite');
+  end;
+
+  procedure ut_v2_migration_all is
+    pragma autonomous_transaction;
+    l_package clob;
+  begin
+    --act
+    ut_v2_migration.run_all;
+    --assert
+    l_package := dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR_NEW');
+    ut.expect( l_package ).to_match('-- %suite');
+    l_package := dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR');
+    ut.expect( l_package ).to_match('-- %suite');
   end;
 
 end;
