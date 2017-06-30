@@ -94,7 +94,7 @@ end;
     dbms_output.put_line('register_ut_v2_packages');
     utplsql.run('UT_BETWNSTR');
     utSuite.add ('MIGRATION');
-    utPackage.add('MIGRATION', 'UT_BETWNSTR_NEW');
+    utPackage.add('MIGRATION', 'UT_BETWNSTR_NEW', samepackage_in => true);
     utplsql.testsuite ('MIGRATION');
     commit;
   end;
@@ -157,7 +157,7 @@ end;
     --assert
     l_package := dbms_metadata.get_ddl('PACKAGE','UT_BETWNSTR_NEW');
     ut.expect( l_package ).to_match('-- %suite');
-    ut.expect( l_package ).to_match('-- %suitepath(MIGRATION)');
+    ut.expect( l_package ).to_match('-- %suitepath\(MIGRATION\)');
     ut.expect( l_package ).to_match('-- %test');
     ut.expect( l_package ).to_match('-- %beforeall');
     ut.expect( l_package ).to_match('-- %afterall');

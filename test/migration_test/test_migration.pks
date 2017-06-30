@@ -30,7 +30,7 @@ create or replace package test_migration as
   --%beforetest(register_ut_v2_packages)
   procedure ut_v2_migration_one_pkg;
 
-  --%test(Migrates a registered suite packages)
+  --%test(Migrates a registered suite)
   --%beforetest(register_ut_v2_packages)
   procedure ut_v2_migration_one_suite;
 
