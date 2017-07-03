@@ -83,8 +83,8 @@ set echo off
 @@install_component.sql 'migration/ut3.ut_v2_migration.pkb'
 
 set echo on
-create or replace public synonym utassert  for &&utplsql_v2_owner..utassert;
-create or replace public synonym utassert2 for &&utplsql_v2_owner..utassert2;
+create or replace public synonym utassert  for &&utplsql_v3_owner..utassert;
+create or replace public synonym utassert2 for &&utplsql_v3_owner..utassert2;
 create or replace public synonym ut_v2_migration for ut_v2_migration;
 
 grant execute on utassert  to public;
