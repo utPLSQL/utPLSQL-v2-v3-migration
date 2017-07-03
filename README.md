@@ -1,5 +1,5 @@
-[![build](https://img.shields.io/travis/utPLSQL/utPLSQL-v2-v3-bridge/master.svg?label=master%20branch)](https://travis-ci.org/utPLSQL/utPLSQL-v2-v3-bridge)
-[![sonar](https://sonarqube.com/api/badges/gate?key=utPLSQL%3AutPLSQL-v2-v3-bridge)](https://sonarqube.com/dashboard/index?id=id=utPLSQL%3AutPLSQL-v2-v3-bridge)
+[![build](https://img.shields.io/travis/utPLSQL/utPLSQL-v2-v3-migration/master.svg?label=master%20branch)](https://travis-ci.org/utPLSQL/utPLSQL-v2-v3-migration)
+[![sonar](https://sonarqube.com/api/badges/gate?key=utPLSQL%3AutPLSQL-v2-v3-migration)](https://sonarqube.com/dashboard/index?id=id=utPLSQL%3AutPLSQL-v2-v3-migration)
 
 # utPLSQL v2 to v3 migration utility
 
@@ -65,7 +65,109 @@ User executing the migration needs to:
 - be the owner of migrated packages
 - have `create any procedure` system privilege 
 
+The migration process is designed, so that after migration, you can invoke the unit tests using both:
+- utPLSQL v2.x framework
+- utPLSQL v3.x framework
+
+Once migration packages were installed, you can either test or execute migration of utPLSQL v2 packages.
+
+## Testing migration
+
+### Dry run migration all utPLSQL v2 packages
+Call:
+```sql
+set serveroutput on
+begin
+  ut_v2_migration.dry_run_all;
+end;
+/
+```
+
+This will execute a dry-run of migration for all utPLSQL v2 packages in the database, that use has access to.
+
+### Dry run migration utPLSQL v2 packages for a user
+Call:
+```sql
+set serveroutput on
+begin
+  ut_v2_migration.dry_run(a_owner => 'XYZ');
+end;
+/
+```
+
+This will execute a dry-run of migration for all utPLSQL v2 packages owned by user `XYZ`.
+
+### Dry run migration utPLSQL v2 suite
+Call:
+```sql
+set serveroutput on
+begin
+  ut_v2_migration.dry_run_for_suite(a_suite_name => 'XYZ');
+end;
+/
+```
+
+This will execute a dry-run of migration for all utPLSQL v2 packages that belong to suite `XYZ`.
+
+### Dry run migration single utPLSQL v2 packages
+Call:
+```sql
+set serveroutput on
+begin
+  ut_v2_migration.dry_run(a_owner => 'XYZ', a_package => 'ABC');
+end;
+/
+```
+
+This will execute a dry-run of migration for utPLSQL v2 package `XYZ.ABC`.
+
 ## Executing migration
 
+### Migrate all utPLSQL v2 packages
+Call:
+```sql
+set serveroutput on
+begin
+  ut_v2_migration.run_all;
+end;
+/
+```
 
+This will execute migration for all utPLSQL v2 packages in the database, that use has access to.
+
+### Migrate utPLSQL v2 packages for a user
+Call:
+```sql
+set serveroutput on
+begin
+  ut_v2_migration.run(a_owner => 'XYZ');
+end;
+/
+```
+
+This will execute migration for all utPLSQL v2 packages owned by user `XYZ`.
+
+### Migrate utPLSQL v2 suite
+Call:
+```sql
+set serveroutput on
+begin
+  ut_v2_migration.run_for_suite(a_suite_name => 'XYZ');
+end;
+/
+```
+
+This will execute migration for all utPLSQL v2 packages that belong to suite `XYZ`.
+
+### Migrate single utPLSQL v2 packages
+Call:
+```sql
+set serveroutput on
+begin
+  ut_v2_migration.run(a_owner => 'XYZ', a_package => 'ABC');
+end;
+/
+```
+
+This will execute migration for utPLSQL v2 package `XYZ.ABC`.
 
