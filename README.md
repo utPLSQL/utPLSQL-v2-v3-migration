@@ -8,13 +8,14 @@ This project provides a migration utility to enrich utPLSQL v2 package specifica
 ## Download
 
 Download latest release from this location:
-https://github.com/utPLSQL/utPLSQL/releases/latest
+
+https://github.com/utPLSQL/utPLSQL-v2-v3-migration/releases/latest
 
 
 ## Requirements
 
-- utPLSQL v2 needs to be installed
-- utPLSQL v3 needs to be installed
+- [latest version of utPLSQL v2.3.1](https://github.com/utPLSQL/utPLSQL/releases/tag/utplsql-2-3-1) needs to be installed
+- [utPLSQL v3](https://github.com/utPLSQL/utPLSQL/releases) needs to be installed
 - Installation needs to be done from a `SYS` account or as `SYSDBA` as utPLSQL v3 user needs to be granted execute privilege on `UTL_FILE`.
 This is required for installing utPLSQL v2 compatibility within utPLSQL v3.
 
@@ -30,10 +31,10 @@ Migration utility contains the following components:
 All of above components are installed into utPLSQL v3 schema, have public synonyms created and are granted to public. 
 
 ## Installation
-
-Execute `install.sql` script using `SQLPlus` or `sqlcl` as in the example below.
+Navigate to `source` directory and execute `install.sql` script using `SQLPlus` or `sqlcl` as in the example below.
  
 ```bash
+cd source
 sqlplus sys/oracle@xe as sysdba @install utp ut3
 ```
 
