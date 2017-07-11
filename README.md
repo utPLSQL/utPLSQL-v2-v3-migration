@@ -14,8 +14,8 @@ https://github.com/utPLSQL/utPLSQL-v2-v3-migration/releases/latest
 
 ## Requirements
 
-- [latest version of utPLSQL v2.3.1](https://github.com/utPLSQL/utPLSQL/releases/tag/utplsql-2-3-1) needs to be installed
-- [utPLSQL v3](https://github.com/utPLSQL/utPLSQL/releases) needs to be installed
+- [latest version of utPLSQL v2](https://github.com/utPLSQL/utPLSQL/releases/tag/utplsql-2-3-1) needs to be installed
+- [utPLSQL v3](https://github.com/utPLSQL/utPLSQL/releases/latest) needs to be installed
 - Installation needs to be done from a `SYS` account or as `SYSDBA` as utPLSQL v3 user needs to be granted execute privilege on `UTL_FILE`.
 This is required for installing utPLSQL v2 compatibility within utPLSQL v3.
 
@@ -74,8 +74,13 @@ Once migration packages were installed, you can either test or execute migration
 
 ## Testing migration
 
-### Dry run migration all utPLSQL v2 packages
-Call:
+You may want to execute a dry-run of migration prior to running actual process on your database.
+The dry-run will output results of migration to dbms_output.
+
+There are several ways to invoke the dry-run:
+
+- for all utPLSQL v2 packages registered in the database
+
 ```sql
 set serveroutput on
 begin
@@ -84,10 +89,8 @@ end;
 /
 ```
 
-This will execute a dry-run of migration for all utPLSQL v2 packages in the database, that use has access to.
+- for utPLSQL v2 packages registered in a schema
 
-### Dry run migration utPLSQL v2 packages for a user
-Call:
 ```sql
 set serveroutput on
 begin
@@ -96,10 +99,8 @@ end;
 /
 ```
 
-This will execute a dry-run of migration for all utPLSQL v2 packages owned by user `XYZ`.
+- for utPLSQL v2 suite
 
-### Dry run migration utPLSQL v2 suite
-Call:
 ```sql
 set serveroutput on
 begin
@@ -108,10 +109,8 @@ end;
 /
 ```
 
-This will execute a dry-run of migration for all utPLSQL v2 packages that belong to suite `XYZ`.
+- for a single utPLSQL v2 package
 
-### Dry run migration single utPLSQL v2 packages
-Call:
 ```sql
 set serveroutput on
 begin
@@ -120,12 +119,10 @@ end;
 /
 ```
 
-This will execute a dry-run of migration for utPLSQL v2 package `XYZ.ABC`.
-
 ## Executing migration
 
-### Migrate all utPLSQL v2 packages
-Call:
+- for all utPLSQL v2 packages registered in the database
+
 ```sql
 set serveroutput on
 begin
@@ -134,10 +131,8 @@ end;
 /
 ```
 
-This will execute migration for all utPLSQL v2 packages in the database, that use has access to.
+- for utPLSQL v2 packages registered in a schema
 
-### Migrate utPLSQL v2 packages for a user
-Call:
 ```sql
 set serveroutput on
 begin
@@ -146,10 +141,8 @@ end;
 /
 ```
 
-This will execute migration for all utPLSQL v2 packages owned by user `XYZ`.
+- for utPLSQL v2 suite
 
-### Migrate utPLSQL v2 suite
-Call:
 ```sql
 set serveroutput on
 begin
@@ -158,10 +151,8 @@ end;
 /
 ```
 
-This will execute migration for all utPLSQL v2 packages that belong to suite `XYZ`.
+- for a single utPLSQL v2 package
 
-### Migrate single utPLSQL v2 packages
-Call:
 ```sql
 set serveroutput on
 begin
@@ -169,6 +160,3 @@ begin
 end;
 /
 ```
-
-This will execute migration for utPLSQL v2 package `XYZ.ABC`.
-
