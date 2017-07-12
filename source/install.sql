@@ -33,6 +33,8 @@ from dual;
 
 spool off
 
+spool install.log
+
 set termout on
 @params.sql.tmp
 
@@ -98,6 +100,7 @@ prompt &&sep
 
 set termout off
 
+spool off
 /*
 * cleanup temporary sql files
 */

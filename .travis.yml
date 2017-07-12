@@ -55,6 +55,8 @@ install:
   - .travis/setup_account.sh
   # Install project sources and tests
   - source/install.sh
+  - source/uninstall.sh
+  - source/install.sh
   - test/install.sh
 
 script:
