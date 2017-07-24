@@ -42,8 +42,11 @@ whenever sqlerror exit failure rollback
 whenever oserror exit failure rollback
 
 prompt &&sep
+declare
+  l_object varchar2(200);
 begin
-  execute immediate q'[begin dbms_output.put_line('User &&utplsql_v2_owner owns utPLSQL - version '||&&utplsql_v2_owner..utplsql.version()); end;]';
+  l_object := dbms_assert.sql_object_name('&&utplsql_v2_owner..utplsql');
+  execute immediate q'[begin dbms_output.put_line('User &&utplsql_v2_owner owns utPLSQL v2'); end;]';
 exception
   when others then
     raise_application_error(-20000, 'User &&utplsql_v2_owner does not own utPLSQL v2 or current user('||user||') does not have privileges to access it.');
@@ -51,8 +54,11 @@ end;
 /
 
 prompt &&sep
+declare
+  l_object varchar2(200);
 begin
-  execute immediate q'[begin dbms_output.put_line('User &&utplsql_v3_owner owns '||&&utplsql_v3_owner..ut.version()); end;]';
+  l_object := dbms_assert.sql_object_name('&&utplsql_v3_owner..ut');
+  execute immediate q'[begin dbms_output.put_line('User &&utplsql_v3_owner owns utPLSQL v3'); end;]';
 exception
   when others then
     raise_application_error(-20000, 'User &&utplsql_v3_owner does not own utPLSQL v3 or current user('||user||') does not have privileges to access it.');
