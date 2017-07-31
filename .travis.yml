@@ -41,7 +41,7 @@ before_install:
   - curl -LOk $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/3608515 | awk '/browser_download_url/ { print $2 }' | grep ".zip" | sed 's/"//g')
   - unzip -d ${UTPLSQL_V2_DIR} -q utplsql-2-3-1.zip
   # download utPLSQL-cli
-  - curl -Lk -o utPLSQL-cli.zip https://bintray.com/viniciusam/utPLSQL-cli/download_file?file_path=utPLSQL-cli-develop-201707220325.zip
+  - curl -Lk -o utPLSQL-cli.zip https://bintray.com/viniciusam/utPLSQL-cli/download_file?file_path=utPLSQL-cli-develop-201707220321.zip
   - unzip -q utPLSQL-cli.zip
   # download Oracle XE installer for Travis
   - .travis/oracle/download.sh
