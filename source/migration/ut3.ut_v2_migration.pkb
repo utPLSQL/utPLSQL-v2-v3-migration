@@ -110,29 +110,28 @@ create or replace package body ut_v2_migration is
     dbms_metadata.set_transform_param(dbms_metadata.session_transform,'BODY',false);
 
     for rec in (select p.owner
-                      ,p.name
+                      ,upper(case when p.samepackage='N' then p.prefix end || p.name)
                       ,p.description as package_desc
                       ,nvl(p.prefix, c.prefix) prefix
                       ,s.name suite_name
                       ,s.description as suite_desc
                       ,o.status
-                  from &&utplsql_v2_owner..ut_package p
-                      ,&&utplsql_v2_owner..ut_suite s
-                      ,&&utplsql_v2_owner..ut_config c
-                      ,all_objects o
+                  from utp.ut_package p
+                      ,utp.ut_suite s
+                      ,utp.ut_config c
+                      ,dba_objects o
                  where p.id in (select max(p2.id) keep(dense_rank first order by p2.suite_id desc nulls last)
-                                  from &&utplsql_v2_owner..ut_package p2
+                                  from utp.ut_package p2
                                  group by upper(p2.owner)
-                                         ,upper(p2.name))
+                                         ,upper(case when p2.samepackage='N' then p.prefix end || p2.name))
                    and p.suite_id = s.id(+)
                    and p.owner = c.username(+)
                    and p.owner = o.owner
-                   and p.name = o.object_name
+                   and upper(case when p.samepackage='N' then p.prefix end || p.name) = o.object_name
                    and o.object_type in ('PACKAGE')
                    and p.owner = nvl(a_owner_name, p.owner)
                    and p.name = nvl(a_package_name, p.name)
                    and (s.name = a_suite_name or a_suite_name is null)
-                   and upper(p.name) like upper(nvl(p.prefix, c.prefix))||'%'
     ) loop
       begin
         l_items_processed := l_items_processed +1;
