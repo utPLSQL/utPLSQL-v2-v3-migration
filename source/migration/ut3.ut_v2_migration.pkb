@@ -110,7 +110,7 @@ create or replace package body ut_v2_migration is
     dbms_metadata.set_transform_param(dbms_metadata.session_transform,'BODY',false);
 
     for rec in (select p.owner
-                      ,upper(case when p.samepackage='N' then p.prefix end || p.name)
+                      ,upper(case when p.samepackage='N' then p.prefix end || p.name) as name
                       ,p.description as package_desc
                       ,nvl(p.prefix, c.prefix) prefix
                       ,s.name suite_name
@@ -119,7 +119,7 @@ create or replace package body ut_v2_migration is
                   from utp.ut_package p
                       ,utp.ut_suite s
                       ,utp.ut_config c
-                      ,dba_objects o
+                      ,all_objects o
                  where p.id in (select max(p2.id) keep(dense_rank first order by p2.suite_id desc nulls last)
                                   from utp.ut_package p2
                                  group by upper(p2.owner)
