@@ -31,7 +31,7 @@ env:
     - UTPLSQL_V2_DIR="utPLSQL_V2"
 before_install:
   # download travis-oracle
-  - wget 'https://github.com/cbandy/travis-oracle/archive/v2.0.2.tar.gz'
+  - wget 'https://github.com/cbandy/travis-oracle/archive/v2.0.3.tar.gz'
   - mkdir -p .travis/oracle
   - tar x -C .travis/oracle --strip-components=1 -f v2.0.2.tar.gz
   # download latest utPLSQL release
