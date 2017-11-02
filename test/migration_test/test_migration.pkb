@@ -92,6 +92,7 @@ end;
     pragma autonomous_transaction;
   begin
     dbms_output.put_line('register_ut_v2_packages');
+    utConfig.autocompile(false);
     utplsql.run('UT_BETWNSTR');
     utSuite.add ('MIGRATION');
     utPackage.add('MIGRATION', 'UT_BETWNSTR_NEW', samepackage_in => true);
