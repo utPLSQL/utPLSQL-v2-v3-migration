@@ -24,7 +24,6 @@ create or replace package body ut_v2_migration is
     l_setup_proc           varchar2(128 char) := upper(a_package_prefix || 'setup');
     l_teardown_proc        varchar2(128 char) := upper(a_package_prefix || 'teardown');
     l_replace_pattern      varchar2(50);
-    l_annotations          ut_annotations.typ_annotated_package;
     l_suite_desc           varchar2(4000);
     l_suite_package        varchar2(4000);
   begin
@@ -36,10 +35,31 @@ create or replace package body ut_v2_migration is
 
     l_source := dbms_metadata.get_ddl('PACKAGE', l_resolved_object_name, l_resolved_owner);
 
-    l_annotations := ut_annotations.parse_package_annotations(l_source);
-
-    if l_annotations.package_annotations.exists('suite') then
-      raise_application_error(-20400, 'Package '||a_packge_name||' is already version 3 compatible');
+    if ut.version like '%v3.0.0%' or ut.version like '%v3.0.1%' or ut.version like '%v3.0.2%' or ut.version like '%v3.0.3%' then
+      execute immediate q'[
+       declare
+         l_annotations ut_annotations.typ_annotated_package := ut_annotations.parse_package_annotations(:l_source);
+       begin
+         if l_annotations.package_annotations.exists('suite') then
+           raise_application_error(-20400, 'Package '||:a_packge_name||' is already version 3 compatible');
+         end if;
+       end;
+      ]' using l_source, a_packge_name;
+    else
+      execute immediate q'[
+      declare
+        l_exists integer;
+      begin
+        dbms_output.put_line('checking annotations');
+        select 1
+          into l_exists
+          from table( ut_annotation_parser.parse_object_annotations( :l_source ) )
+         where name = 'suite';
+        raise_application_error(-20400, 'Package '||:a_packge_name||' is already version 3 compatible');
+      exception
+        when no_data_found then
+        null;
+      end;]' using l_source, a_packge_name;
     end if;
 
     if trim(a_package_desc) is not null then
@@ -110,28 +130,29 @@ create or replace package body ut_v2_migration is
     dbms_metadata.set_transform_param(dbms_metadata.session_transform,'BODY',false);
 
     for rec in (select p.owner
-                      ,upper(case when p.samepackage='N' then p.prefix end || p.name) as name
+                      ,p.name
                       ,p.description as package_desc
                       ,nvl(p.prefix, c.prefix) prefix
                       ,s.name suite_name
                       ,s.description as suite_desc
                       ,o.status
-                  from utp.ut_package p
-                      ,utp.ut_suite s
-                      ,utp.ut_config c
+                  from UTP.ut_package p
+                      ,UTP.ut_suite s
+                      ,UTP.ut_config c
                       ,all_objects o
                  where p.id in (select max(p2.id) keep(dense_rank first order by p2.suite_id desc nulls last)
-                                  from utp.ut_package p2
+                                  from UTP.ut_package p2
                                  group by upper(p2.owner)
-                                         ,upper(case when p2.samepackage='N' then p.prefix end || p2.name))
+                                         ,upper(p2.name))
                    and p.suite_id = s.id(+)
                    and p.owner = c.username(+)
                    and p.owner = o.owner
-                   and upper(case when p.samepackage='N' then p.prefix end || p.name) = o.object_name
+                   and p.name = o.object_name
                    and o.object_type in ('PACKAGE')
                    and p.owner = nvl(a_owner_name, p.owner)
                    and p.name = nvl(a_package_name, p.name)
                    and (s.name = a_suite_name or a_suite_name is null)
+                   and upper(p.name) like upper(nvl(p.prefix, c.prefix))||'%'
     ) loop
       begin
         l_items_processed := l_items_processed +1;

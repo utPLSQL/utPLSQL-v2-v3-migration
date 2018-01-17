@@ -29,13 +29,21 @@ env:
     ##utPLSQL variables
     - UTPLSQL_DIR="utPLSQL"
     - UTPLSQL_V2_DIR="utPLSQL_V2"
+  matrix:
+    - UTPLSQL_3_VERSION='v3.0.0'
+    - UTPLSQL_3_VERSION='v3.0.1'
+    - UTPLSQL_3_VERSION='v3.0.2'
+    - UTPLSQL_3_VERSION='v3.0.3'
+    - UTPLSQL_3_VERSION='v3.0.4'
+    - UTPLSQL_3_VERSION='latest'
+
 before_install:
   # download travis-oracle
   - wget 'https://github.com/cbandy/travis-oracle/archive/v2.0.3.tar.gz'
   - mkdir -p .travis/oracle
   - tar x -C .travis/oracle --strip-components=1 -f v2.0.3.tar.gz
   # download latest utPLSQL release
-  - curl -LOk $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/latest | awk '/browser_download_url/ { print $2 }' | grep ".zip" | sed 's/"//g')
+  - curl -LOk $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/${UTPLSQL_3_VERSION} | awk '/browser_download_url/ { print $2 }' | grep ".zip" | sed 's/"//g')
   - unzip -q utPLSQL.zip
   # download utPLSQL v.2.3.1 release
   - curl -LOk $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/3608515 | awk '/browser_download_url/ { print $2 }' | grep ".zip" | sed 's/"//g')
