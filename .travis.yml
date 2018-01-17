@@ -26,6 +26,7 @@ env:
     # project variables
     - DB_USER=ut3_demo
     - DB_PASS=LHZYPbWvYdu2ctp8
+    - CACHE_DIR=$HOME/.cache
     ##utPLSQL variables
     - UTPLSQL_DIR="utPLSQL"
     - UTPLSQL_V2_DIR="utPLSQL_V2"
