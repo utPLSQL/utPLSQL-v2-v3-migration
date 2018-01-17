@@ -29,13 +29,15 @@ env:
     ##utPLSQL variables
     - UTPLSQL_DIR="utPLSQL"
     - UTPLSQL_V2_DIR="utPLSQL_V2"
+    - MAVEN_HOME=/usr/local/maven
+    - MAVEN_CFG=$HOME/.m2
   matrix:
-    - UTPLSQL_3_VERSION='v3.0.0'
-    - UTPLSQL_3_VERSION='v3.0.1'
-    - UTPLSQL_3_VERSION='v3.0.2'
-    - UTPLSQL_3_VERSION='v3.0.3'
-    - UTPLSQL_3_VERSION='v3.0.4'
-    - UTPLSQL_3_VERSION='latest'
+    - UTPLSQL_3_VERSION='v3.0.0'  RELEASE_ID=6394329
+    - UTPLSQL_3_VERSION='v3.0.1'  RELEASE_ID=6716262
+    - UTPLSQL_3_VERSION='v3.0.2'  RELEASE_ID=7085296
+    - UTPLSQL_3_VERSION='v3.0.3'  RELEASE_ID=7293900
+    - UTPLSQL_3_VERSION='v3.0.4'  RELEASE_ID=8372513
+    - UTPLSQL_3_VERSION='latest'  RELEASE_ID='latest'
 
 before_install:
   # download travis-oracle
@@ -43,14 +45,16 @@ before_install:
   - mkdir -p .travis/oracle
   - tar x -C .travis/oracle --strip-components=1 -f v2.0.3.tar.gz
   # download latest utPLSQL release
-  - curl -LOk $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/${UTPLSQL_3_VERSION} | awk '/browser_download_url/ { print $2 }' | grep ".zip" | sed 's/"//g')
+  - curl -LOk $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/${RELEASE_ID} | awk '/browser_download_url/ { print $2 }' | grep ".zip" | sed 's/"//g')
   - unzip -q utPLSQL.zip
   # download utPLSQL v.2.3.1 release
   - curl -LOk $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/3608515 | awk '/browser_download_url/ { print $2 }' | grep ".zip" | sed 's/"//g')
   - unzip -d ${UTPLSQL_V2_DIR} -q utplsql-2-3-1.zip
   # download utPLSQL-cli
-  - curl -Lk -o utPLSQL-cli.zip https://bintray.com/viniciusam/utPLSQL-cli/download_file?file_path=utPLSQL-cli-develop-201706191645.zip
-  - unzip -q utPLSQL-cli.zip
+  - curl -Lk -o utPLSQL-cli.zip https://github.com/utPLSQL/utPLSQL-cli/releases/download/v${UTPLSQL_CLI_VERSION}/utPLSQL-cli.zip
+  - unzip -q utPLSQL-cli.zip && chmod -R u+x utPLSQL-cli
+  #Download Oracle jdc via maven
+  - bash .travis/maven_cfg.sh
   # download Oracle XE installer for Travis
   - .travis/oracle/download.sh
 
