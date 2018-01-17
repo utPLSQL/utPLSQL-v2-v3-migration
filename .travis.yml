@@ -55,7 +55,7 @@ before_install:
   # download utPLSQL-cli
   - curl -Lk -o utPLSQL-cli.zip https://github.com/utPLSQL/utPLSQL-cli/releases/download/v${UTPLSQL_CLI_VERSION}/utPLSQL-cli.zip
   - unzip -q utPLSQL-cli.zip && chmod -R u+x utPLSQL-cli
-  #Download Oracle jdc via maven
+  #Download Oracle jdbc using maven
   - bash .travis/maven_cfg.sh
   # download Oracle XE installer for Travis
   - .travis/oracle/download.sh
