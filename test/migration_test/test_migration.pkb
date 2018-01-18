@@ -89,6 +89,8 @@ end;
   end;
 
   procedure register_ut_v2_packages is
+    l_lines    dbmsoutput_linesarray;
+    l_numlines integer;
     pragma autonomous_transaction;
   begin
     dbms_output.put_line('register_ut_v2_packages');
@@ -97,6 +99,8 @@ end;
     utSuite.add ('MIGRATION');
     utPackage.add('MIGRATION', 'UT_BETWNSTR_NEW', samepackage_in => true);
     utplsql.testsuite ('MIGRATION');
+
+    dbms_output.get_lines ( l_lines, l_numlines );
     commit;
   end;
 

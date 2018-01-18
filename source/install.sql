@@ -100,6 +100,13 @@ grant execute on utassert2 to public;
 grant execute on ut_v2_migration to public;
 
 set echo off
+set feedback off
+whenever sqlerror continue
+create or replace public synonym ut_annotation_parser for &&utplsql_v3_owner..ut_annotation_parser;
+grant execute on &&utplsql_v3_owner..ut_annotation_parser to public;
+create or replace public synonym ut_annotations for &&utplsql_v3_owner..ut_annotations;
+grant execute on &&utplsql_v3_owner..ut_annotations to public;
+
 prompt &&sep
 PROMPT Installation completed successfully
 prompt &&sep
