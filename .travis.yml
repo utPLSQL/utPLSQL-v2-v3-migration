@@ -47,10 +47,10 @@ before_install:
   - mkdir -p .travis/oracle
   - tar x -C .travis/oracle --strip-components=1 -f v2.0.3.tar.gz
   # download latest utPLSQL release
-  - curl -Lk -o utPLSQL_v3.zip $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/${RELEASE_ID} | awk '/browser_download_url/ { print $2 }' | grep ".zip" | sed 's/"//g')
+  - curl -Lk -o utPLSQL_v3.zip $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/${RELEASE_ID} | awk '/browser_download_url/ { print $2 }' | grep  '\.zip"$' | sed 's/"//g')
   - unzip -q utPLSQL_v3.zip
   # download utPLSQL v.2.3.1 release
-  - curl -Lk -o utPLSQL_v2.zip $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/3608515 | awk '/browser_download_url/ { print $2 }' | grep ".zip" | sed 's/"//g')
+  - curl -Lk -o utPLSQL_v2.zip $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/3608515 | awk '/browser_download_url/ { print $2 }' | grep  '\.zip"$' | sed 's/"//g')
   - unzip -d ${UTPLSQL_V2_DIR} -q utPLSQL_v2.zip
   # download utPLSQL-cli
   - curl -Lk -o utPLSQL-cli.zip https://github.com/utPLSQL/utPLSQL-cli/releases/download/v${UTPLSQL_CLI_VERSION}/utPLSQL-cli.zip
