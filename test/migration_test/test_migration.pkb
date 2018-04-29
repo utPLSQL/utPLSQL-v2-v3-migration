@@ -41,12 +41,26 @@ end;
 
   procedure coverage_develop_start is
   begin
-    ut3.ut_coverage.coverage_start_develop();
+    execute immediate 'begin ut3.ut_coverage.coverage_start_develop(); end;';
+    exception
+      when others then
+        execute immediate q'[
+          begin
+            ut3.ut_coverage.coverage_start();
+            ut3.ut_coverage.set_develop_mode(true);
+          end;]';
   end;
 
   procedure coverage_develop_stop is
   begin
-    ut3.ut_coverage.coverage_stop_develop();
+    execute immediate 'begin ut3.ut_coverage.coverage_stop_develop(); end;';
+    exception
+      when others then
+        execute immediate q'[
+          begin
+            ut3.ut_coverage.set_develop_mode(false);
+            ut3.ut_coverage.coverage_stop();
+          end;]';
   end;
 
   procedure create_ut_v2_packages is
