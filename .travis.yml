@@ -34,21 +34,21 @@ env:
     - MAVEN_CFG=$HOME/.m2
     - UTPLSQL_CLI_VERSION="3.1.0"
   matrix:
-    - UTPLSQL_3_VERSION='v3.0.0'  RELEASE_ID=6394329  UTPLSQL_DIR='utPLSQLv3.0.0'
-    - UTPLSQL_3_VERSION='v3.0.1'  RELEASE_ID=6716262
-    - UTPLSQL_3_VERSION='v3.0.2'  RELEASE_ID=7085296
-    - UTPLSQL_3_VERSION='v3.0.3'  RELEASE_ID=7293900
-    - UTPLSQL_3_VERSION='v3.0.4'  RELEASE_ID=8372513
-    - UTPLSQL_3_VERSION='latest'  RELEASE_ID='latest'
+    - UTPLSQL_3_VERSION='v3.0.0'
+    - UTPLSQL_3_VERSION='v3.0.1'
+    - UTPLSQL_3_VERSION='v3.0.2'
+    - UTPLSQL_3_VERSION='v3.0.3'
+    - UTPLSQL_3_VERSION='v3.0.4'
+    - UTPLSQL_3_VERSION='v3.1.1'
+    - UTPLSQL_3_VERSION='develop'
 
 before_install:
   # download travis-oracle
   - wget 'https://github.com/cbandy/travis-oracle/archive/v2.0.3.tar.gz'
   - mkdir -p .travis/oracle
   - tar x -C .travis/oracle --strip-components=1 -f v2.0.3.tar.gz
-  # download latest utPLSQL release
-  - curl -Lk -o utPLSQL_v3.zip $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/${RELEASE_ID} | awk '/browser_download_url/ { print $2 }' | grep  '\.zip"$' | sed 's/"//g')
-  - unzip -q utPLSQL_v3.zip
+  # download utPLSQL v3 release
+  - git clone --depth=1 --branch=${UTPLSQL_3_VERSION} https://github.com/utPLSQL/utPLSQL.git ${UTPLSQL_DIR}
   # download utPLSQL v.2.3.1 release
   - curl -Lk -o utPLSQL_v2.zip $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/3608515 | awk '/browser_download_url/ { print $2 }' | grep  '\.zip"$' | sed 's/"//g')
   - unzip -d ${UTPLSQL_V2_DIR} -q utPLSQL_v2.zip
