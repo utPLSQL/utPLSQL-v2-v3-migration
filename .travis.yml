@@ -35,8 +35,8 @@ env:
     - UTPLSQL_CLI_VERSION="3.1.0"
   matrix:
     - UTPLSQL_3_VERSION='develop'
-    - UTPLSQL_3_VERSION='v3.0.0'
-    - UTPLSQL_3_VERSION='v3.0.4'
+    - UTPLSQL_3_VERSION='v3.0.0' VERSION_PLACEHOLDER='utPLSQL - Version X.X.X.X'
+    - UTPLSQL_3_VERSION='v3.0.4' VERSION_PLACEHOLDER='X.X.X.X'
     - UTPLSQL_3_VERSION='v3.1.1'
 
 before_install:
@@ -46,6 +46,8 @@ before_install:
   - tar x -C .travis/oracle --strip-components=1 -f v2.0.3.tar.gz
   # download utPLSQL v3 release
   - git clone --depth=1 --branch=${UTPLSQL_3_VERSION} https://github.com/utPLSQL/utPLSQL.git ${UTPLSQL_DIR}
+  # update version placeholder before install
+  - if [[ -n ${VERSION_PLACEHOLDER} ]] ; then sed -i "s/${VERSION_PLACEHOLDER}/${UTPLSQL_3_VERSION}/g" ${UTPLSQL_DIR}/source/core/ut_utils.pks; fi
   # download utPLSQL v.2.3.1 release
   - curl -Lk -o utPLSQL_v2.zip $(curl --silent https://api.github.com/repos/utPLSQL/utPLSQL/releases/3608515 | awk '/browser_download_url/ { print $2 }' | grep  '\.zip"$' | sed 's/"//g')
   - unzip -d ${UTPLSQL_V2_DIR} -q utPLSQL_v2.zip
