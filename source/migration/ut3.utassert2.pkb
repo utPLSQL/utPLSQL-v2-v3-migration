@@ -94,7 +94,9 @@ CREATE OR REPLACE PACKAGE BODY utassert2 IS
     g_previous_pass := NOT l_failure;
 
     /* END chrisrimmer 42694 */
-    IF INSTR( DBMS_UTILITY.FORMAT_CALL_STACK(), 'UT_RUNNER') > 0 THEN
+    IF INSTR( DBMS_UTILITY.FORMAT_CALL_STACK(), 'UT_RUNNER') > 0 
+      AND  INSTR( DBMS_UTILITY.FORMAT_CALL_STACK(), 'UTPLSQL') = 0 
+    THEN
       ut.expect(l_failure,a_message => msg_in).to_be_false;
     ELSE
       IF utplsql2.tracing THEN
