@@ -136,12 +136,12 @@ create or replace package body ut_v2_migration is
                       ,s.name suite_name
                       ,s.description as suite_desc
                       ,o.status
-                  from UTP.ut_package p
-                      ,UTP.ut_suite s
-                      ,UTP.ut_config c
+                  from &&utplsql_v2_owner..ut_package p
+                      ,&&utplsql_v2_owner..ut_suite s
+                      ,&&utplsql_v2_owner..ut_config c
                       ,all_objects o
                  where p.id in (select max(p2.id) keep(dense_rank first order by p2.suite_id desc nulls last)
-                                  from UTP.ut_package p2
+                                  from &&utplsql_v2_owner..ut_package p2
                                  group by upper(p2.owner)
                                          ,upper(p2.name))
                    and p.suite_id = s.id(+)
