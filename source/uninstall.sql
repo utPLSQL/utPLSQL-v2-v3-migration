@@ -38,7 +38,7 @@ set termout on
 spool uninstall.log
 
 drop package &&utplsql_v3_owner..ut_v2_migration;
-drop public synonym &&utplsql_v3_owner..ut_v2_migration;
+drop public synonym ut_v2_migration;
 drop package &&utplsql_v3_owner..utassert;
 drop package &&utplsql_v3_owner..utassert2;
 create or replace public synonym utassert  for &&utplsql_v2_owner..utassert;
