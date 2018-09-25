@@ -40,10 +40,9 @@ env:
     - UTPLSQL_3_VERSION='v3.1.1'
 
 before_install:
-  # download travis-oracle
-  - wget 'https://github.com/cbandy/travis-oracle/archive/v2.0.3.tar.gz'
-  - mkdir -p .travis/oracle
-  - tar x -C .travis/oracle --strip-components=1 -f v2.0.3.tar.gz
+  - npm install -g phantomjs-prebuilt casperjs
+  # download Oracle XE installer for Travis
+  - .travis/oracle/download.sh
   # download utPLSQL v3 release
   - git clone --depth=1 --branch=${UTPLSQL_3_VERSION} https://github.com/utPLSQL/utPLSQL.git ${UTPLSQL_DIR}
   # update version placeholder before install
@@ -56,8 +55,6 @@ before_install:
   - unzip -q utPLSQL-cli.zip && chmod -R u+x utPLSQL-cli
   #Download Oracle jdbc using maven
   - bash .travis/maven_cfg.sh
-  # download Oracle XE installer for Travis
-  - .travis/oracle/download.sh
 
 install:
   # Install Oracle Database
