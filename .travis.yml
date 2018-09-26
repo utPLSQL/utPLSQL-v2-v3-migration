@@ -17,6 +17,9 @@ env:
     - DOCKHER_HUB_REPO="utplsqlv3/oracledb"
     - DOCKER_OPTIONS='--shm-size=1g'
     - ORACLE_VERSION="11g-r2-xe"
+    # Database Env
+    - SQLCLI="$HOME/sqlcl/bin/sql"
+    - ORACLE_PWD="oracle"
     - CONNECTION_STR='127.0.0.1:1521/XE'
     - ORA_SDTZ='Europe/London' #Needed as a client parameter
     - TZ='Europe/London'       #Needed as a DB Server parameter
@@ -39,6 +42,7 @@ env:
     - UTPLSQL_3_VERSION='v3.1.1'
 
 cache:
+  pip: true
   directories:
   - $CACHE_DIR
   - /home/travis/.sonar/cache

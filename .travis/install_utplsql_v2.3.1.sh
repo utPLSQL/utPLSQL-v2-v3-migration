@@ -4,7 +4,7 @@ set -ev
 
 cd ${UTPLSQL_V2_DIR}/code
 
-sqlplus -L -S / AS SYSDBA <<SQL
+"$SQLCLI" sys/$ORACLE_PWD@//$CONNECTION_STR AS SYSDBA <<SQL
 create user utp identified by utp default tablespace
   users temporary tablespace temp;
 
@@ -17,7 +17,7 @@ grant execute on utl_file to utp;
 exit
 SQL
 
-sqlplus -S -L utp/utp <<SQL
+"$SQLCLI" -S -L utp/utp@//$CONNECTION_STR <<SQL
 @ut_i_do.sql install
 exit
 SQL

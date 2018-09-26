@@ -4,4 +4,4 @@ set -ev
 
 cd "$(dirname "$(readlink -f "$0")")"
 
-sqlplus -L -S / as sysdba @uninstall.sql utp ut3
+"$SQLCLI" sys/$ORACLE_PWD@//$CONNECTION_STR AS SYSDBA @uninstall.sql utp ut3

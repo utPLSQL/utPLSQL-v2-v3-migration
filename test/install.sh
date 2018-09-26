@@ -4,7 +4,7 @@ set -ev
 
 cd "$(dirname "$(readlink -f "$0")")"
 
-sqlplus -L -S ${DB_USER}/${DB_PASS} <<SQL
+"$SQLCLI" ${DB_USER}/${DB_PASS}@//$CONNECTION_STR <<SQL
 whenever sqlerror exit failure rollback
 whenever oserror  exit failure rollback
 

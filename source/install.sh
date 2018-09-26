@@ -4,4 +4,4 @@ set -ev
 
 cd "$(dirname "$(readlink -f "$0")")"
 
-sqlplus -L -S / as sysdba @install.sql utp ut3
+"$SQLCLI" sys/$ORACLE_PWD@//$CONNECTION_STR AS SYSDBA @install.sql utp ut3
