@@ -14,15 +14,10 @@ addons:
 
 env:
   global:
-    - DOCKHER_HUB_REPO="${DOCKER_BASE_TAG:-$UT3_DOCKER_REPO}"
+    - DOCKHER_HUB_REPO="utplsqlv3/oracledb"
     - DOCKER_OPTIONS='--shm-size=1g'
-    - ORACLE_VERSION="${DOCKER_TAG_11G:-11g-r2-xe}"
+    - ORACLE_VERSION="11g-r2-xe"
     - CONNECTION_STR='127.0.0.1:1521/XE'
-    #Oracle 11g XE R2 variables
-    - ORACLE_COOKIE=sqldev
-    - ORACLE_FILE=oracle11g/xe/oracle-xe-11.2.0-1.0.x86_64.rpm.zip
-    - ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe
-    - ORACLE_SID=XE
     - ORA_SDTZ='Europe/London' #Needed as a client parameter
     - TZ='Europe/London'       #Needed as a DB Server parameter
     #Adding SQLPlus to path
@@ -66,6 +61,8 @@ before_install:
   - unzip -q utPLSQL-cli.zip && chmod -R u+x utPLSQL-cli
   #Download Oracle jdbc using maven
   - bash .travis/maven_cfg.sh
+  #Instal SQLcl
+  - bash .travis/install_sqlcl.sh
 
 install:
   #Wait for DB to start
