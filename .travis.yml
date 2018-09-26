@@ -14,6 +14,10 @@ addons:
 
 env:
   global:
+    - DOCKHER_HUB_REPO="${DOCKER_BASE_TAG:-$UT3_DOCKER_REPO}"
+    - DOCKER_OPTIONS='--shm-size=1g'
+    - ORACLE_VERSION="${DOCKER_TAG_11G:-11g-r2-xe}"
+    - CONNECTION_STR='127.0.0.1:1521/XE'
     #Oracle 11g XE R2 variables
     - ORACLE_COOKIE=sqldev
     - ORACLE_FILE=oracle11g/xe/oracle-xe-11.2.0-1.0.x86_64.rpm.zip
@@ -39,10 +43,17 @@ env:
     - UTPLSQL_3_VERSION='v3.0.4' VERSION_PLACEHOLDER='X.X.X.X'
     - UTPLSQL_3_VERSION='v3.1.1'
 
+cache:
+  directories:
+  - $CACHE_DIR
+  - /home/travis/.sonar/cache
+  - $MAVEN_CFG
+
 before_install:
-  - npm install -g phantomjs-prebuilt casperjs
-  # download Oracle XE installer for Travis
-  - .travis/oracle/download.sh
+  #Setup database
+  - docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+  - time docker pull ${DOCKHER_HUB_REPO}:${ORACLE_VERSION}
+  - docker run -d --name ${ORACLE_VERSION} ${DOCKER_OPTIONS} -p 1521:1521 ${DOCKHER_HUB_REPO}:${ORACLE_VERSION}
   # download utPLSQL v3 release
   - git clone --depth=1 --branch=${UTPLSQL_3_VERSION} https://github.com/utPLSQL/utPLSQL.git ${UTPLSQL_DIR}
   # update version placeholder before install
@@ -57,8 +68,8 @@ before_install:
   - bash .travis/maven_cfg.sh
 
 install:
-  # Install Oracle Database
-  - .travis/oracle/install.sh
+  #Wait for DB to start
+  - time docker logs -f ${ORACLE_VERSION} | grep -m 1 "DATABASE IS READY TO USE!" --line-buffered
   # Install utPLSQL v3
   - .travis/install_utplsql.sh
   # Install utPLSQL v2.3.1
