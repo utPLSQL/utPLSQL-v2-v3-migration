@@ -17,7 +17,7 @@ grant execute on utl_file to utp;
 exit
 SQL
 
-"$SQLCLI" -S -L utp/utp@//$CONNECTION_STR <<SQL
+"$SQLCLI" utp/utp@//$CONNECTION_STR <<SQL
 @ut_i_do.sql install
 exit
 SQL
