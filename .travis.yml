@@ -70,7 +70,7 @@ before_install:
 
 install:
   #Wait for DB to start
-  - time docker logs -f ${ORACLE_VERSION} | grep -m 1 "DATABASE IS READY TO USE!" --line-buffered
+  - (docker logs -f 12c-r2-se2-small | while read LOGLINE; do [[ "${LOGLINE}" == *"DATABASE IS READY TO USE!"* ]] && pkill -P $$ docker; done)
   # Install utPLSQL v3
   - .travis/install_utplsql.sh
   # Install utPLSQL v2.3.1
