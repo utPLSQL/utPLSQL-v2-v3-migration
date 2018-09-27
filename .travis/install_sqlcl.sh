@@ -17,4 +17,4 @@ fi;
 unzip -q $CACHE_DIR/$SQLCL_FILE -d $HOME
 
 # Check if it is installed correctly.
-$SQLCLI -v
+$HOME/sqlcl/bin/sql -v

@@ -18,6 +18,7 @@ env:
     - DOCKER_OPTIONS='--shm-size=1g'
     - ORACLE_VERSION="11g-r2-xe"
     # Database Env
+    - LD_LIBRARY_PATH=$HOME/instantclient_18_3/:$LD_LIBRARY_PATH
     - SQLCLI="$HOME/instantclient_18_3/sqlplus"
     - ORACLE_PWD="oracle"
     - CONNECTION_STR='127.0.0.1:1521/XE'
@@ -63,14 +64,14 @@ before_install:
   # download utPLSQL-cli
   - curl -Lk -o utPLSQL-cli.zip https://github.com/utPLSQL/utPLSQL-cli/releases/download/v${UTPLSQL_CLI_VERSION}/utPLSQL-cli.zip
   - unzip -q utPLSQL-cli.zip && chmod -R u+x utPLSQL-cli
+  #Instal SQLPlus
+  - bash .travis/install_sqlplus.sh
   #Download Oracle jdbc using maven
   - bash .travis/maven_cfg.sh
-  #Instal SQLcl
-  - bash .travis/install_sqlcl.sh
 
 install:
   #Wait for DB to start
-  - (docker logs -f 12c-r2-se2-small | while read LOGLINE; do [[ "${LOGLINE}" == *"DATABASE IS READY TO USE!"* ]] && pkill -P $$ docker; done)
+  - ( docker logs -f ${ORACLE_VERSION} & ) | grep -m 1 "DATABASE IS READY TO USE!" --line-buffered
   # Install utPLSQL v3
   - .travis/install_utplsql.sh
   # Install utPLSQL v2.3.1

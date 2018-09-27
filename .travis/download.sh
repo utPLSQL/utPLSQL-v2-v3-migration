@@ -69,7 +69,15 @@ fi
 if [ "$PRODUCT" == "sqlplus" ]; then
     agreementUrl="https://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html"
     downloadUrl="http://download.oracle.com/otn/linux/instantclient/183000/instantclient-sqlplus-linux.x64-18.3.0.0.0dbru.zip"
-    outputFile=sqlplus-linux.x64-18.3.0.0.0dbru.zip
+    outputFile=instantclient-sqlplus-linux.x64-18.3.0.0.0dbru.zip
+    downloadFile $agreementUrl $downloadUrl $outputFile
+    exit 0
+fi
+
+if [ "$PRODUCT" == "instantclient" ]; then
+    agreementUrl="https://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html"
+    downloadUrl="http://download.oracle.com/otn/linux/instantclient/183000/instantclient-basiclite-linux.x64-18.3.0.0.0dbru.zip"
+    outputFile=instantclient-basiclite-linux.x64-18.3.0.0.0dbru.zip
     downloadFile $agreementUrl $downloadUrl $outputFile
     exit 0
 fi
