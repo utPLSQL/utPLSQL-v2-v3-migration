@@ -18,8 +18,6 @@ create or replace package body ut_v2_migration is
   */
 
   procedure upgrade_v2_package_spec(a_owner_name varchar2, a_packge_name varchar2, a_package_desc varchar2, a_package_prefix varchar2, a_parent_suite varchar2, a_compile_flag boolean) is
-    l_resolved_owner       varchar2(128 char);
-    l_resolved_object_name varchar2(128 char);
     l_source               clob;
     l_setup_proc           varchar2(128 char) := upper(a_package_prefix || 'setup');
     l_teardown_proc        varchar2(128 char) := upper(a_package_prefix || 'teardown');
@@ -27,13 +25,8 @@ create or replace package body ut_v2_migration is
     l_suite_desc           varchar2(4000);
     l_suite_package        varchar2(4000);
   begin
-    l_resolved_owner       := a_owner_name;
-    l_resolved_object_name := a_packge_name;
 
-    ut_metadata.do_resolve(a_owner          => l_resolved_owner
-                          ,a_object         => l_resolved_object_name);
-
-    l_source := dbms_metadata.get_ddl('PACKAGE', l_resolved_object_name, l_resolved_owner);
+    l_source := dbms_metadata.get_ddl('PACKAGE', a_packge_name, a_owner_name);
 
     if ut.version like '%v3.0.0%' or ut.version like '%v3.0.1%' or ut.version like '%v3.0.2%' or ut.version like '%v3.0.3%' then
       execute immediate q'[
@@ -70,21 +63,21 @@ create or replace package body ut_v2_migration is
       l_suite_package := chr(10)||'  -- %suitepath('||trim(a_parent_suite)||')';
     end if;
 
-    if not regexp_like(l_source,'\A(\s*(CREATE\s+(OR\s+REPLACE)?(\s+(NON)?EDITIONABLE)?\s+)?PACKAGE\s+)"'||l_resolved_owner||'"."'||l_resolved_object_name||'"([^;]*?(AS|IS))','i') then
+    if not regexp_like(l_source,'\A(\s*(CREATE\s+(OR\s+REPLACE)?(\s+(NON)?EDITIONABLE)?\s+)?PACKAGE\s+)"'||a_owner_name||'"."'||a_packge_name||'"([^;]*?(AS|IS))','i') then
       raise_application_error(-20401,'Could not parse the package');
     end if;
 
     l_source := regexp_replace(srcstr     => l_source
-                              ,pattern    => '\A(\s*(CREATE\s+(OR\s+REPLACE)?(\s+(NON)?EDITIONABLE)?\s+)?PACKAGE\s+)"'||l_resolved_owner||'"."'||l_resolved_object_name||'"([^;]*?(AS|IS))'
-                              ,replacestr => '\1' || l_resolved_owner || '.' || l_resolved_object_name || '\6' || chr(10) || chr(10) || '  -- %suite' || l_suite_desc ||
+                              ,pattern    => '\A(\s*(CREATE\s+(OR\s+REPLACE)?(\s+(NON)?EDITIONABLE)?\s+)?PACKAGE\s+)"'||a_owner_name||'"."'||a_packge_name||'"([^;]*?(AS|IS))'
+                              ,replacestr => '\1' || a_owner_name || '.' || a_packge_name || '\6' || chr(10) || chr(10) || '  -- %suite' || l_suite_desc ||
                                              l_suite_package || chr(10) || chr(10)
                               ,modifier   => 'i'
                               ,occurrence => 1);
 
     for rec in (select t.*
                   from all_procedures t
-                 where t.owner = l_resolved_owner
-                   and t.object_name = l_resolved_object_name
+                 where t.owner = a_owner_name
+                   and t.object_name = a_packge_name
                    and t.procedure_name is not null
                    and upper(t.procedure_name) like upper(replace(a_package_prefix, '_', '\_') || '%') escape '\') loop
 
@@ -105,7 +98,7 @@ create or replace package body ut_v2_migration is
     end loop;
 
     if a_compile_flag then
-      ut_utils.debug_log('Compiling package: ' || l_resolved_object_name);
+      ut_utils.debug_log('Compiling package: ' || a_packge_name);
       ut_utils.debug_log(l_source);
 
       execute immediate l_source;
