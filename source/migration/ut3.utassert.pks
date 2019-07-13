@@ -1,4 +1,3 @@
-/* Formatted on 2001/07/13 12:29 (RevealNet Formatter v4.4.1) */
 CREATE OR REPLACE PACKAGE utassert AUTHID CURRENT_USER
 IS
    
