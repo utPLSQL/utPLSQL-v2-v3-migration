@@ -6,7 +6,7 @@ services:
   - docker
 
 jdk:
-  - oraclejdk8
+  - openjdk9
 
 addons:
   sonarcloud:
@@ -18,14 +18,15 @@ addons:
 
 env:
   global:
+    # Docker variables:
     - DOCKHER_HUB_REPO="utplsqlv3/oracledb"
     - DOCKER_OPTIONS='--shm-size=1g'
     - ORACLE_VERSION="11g-r2-xe"
+    - CONNECTION_STR='127.0.0.1:1521/XE'
     # Database Env
     - LD_LIBRARY_PATH=$HOME/instantclient_18_3/:$LD_LIBRARY_PATH
     - SQLCLI="$HOME/instantclient_18_3/sqlplus"
     - ORACLE_PWD="oracle"
-    - CONNECTION_STR='127.0.0.1:1521/XE'
     - ORA_SDTZ='Europe/London' #Needed as a client parameter
     - TZ='Europe/London'       #Needed as a DB Server parameter
     #Adding SQLPlus to path
@@ -39,12 +40,13 @@ env:
     - UTPLSQL_V2_DIR="utPLSQL_V2"
     - MAVEN_HOME=/usr/local/maven
     - MAVEN_CFG=$HOME/.m2
-    - UTPLSQL_CLI_VERSION="3.1.0"
+    - UTPLSQL_CLI_VERSION="3.1.8"
   matrix:
     - UTPLSQL_3_VERSION='develop'
     - UTPLSQL_3_VERSION='v3.0.0' VERSION_PLACEHOLDER='utPLSQL - Version X.X.X.X'
     - UTPLSQL_3_VERSION='v3.0.4' VERSION_PLACEHOLDER='X.X.X.X'
     - UTPLSQL_3_VERSION='v3.1.1'
+    - UTPLSQL_3_VERSION='v3.1.8'
 
 cache:
   pip: true
@@ -70,8 +72,6 @@ before_install:
   - unzip -q utPLSQL-cli.zip && chmod -R u+x utPLSQL-cli
   #Instal SQLPlus
   - bash .travis/install_sqlplus.sh
-  #Download Oracle jdbc using maven
-  - bash .travis/maven_cfg.sh
 
 install:
   #Wait for DB to start
